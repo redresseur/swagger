@@ -1,0 +1,824 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This is a meeting server.",
+    "version": "v1.0.0",
+    "title": "meeting service"
+  },
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "host": "localhost",
+  "basePath": "/v1.0.0",
+  "tags": [
+    {
+      "name": "users",
+      "description": "users interfaces in the system"
+    },
+    {
+      "name": "meeting",
+      "description": "meeting managerment interfaces in the system"
+    }
+  ],
+  "paths": {
+    "/user/{police_num}/login": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "operationId": "userLogin",
+        "summary": "login return the session id",
+        "description": "user login system",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "police_num",
+            "description": "the number of policeman",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/LoginReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "login respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "$ref": "#/definitions/LoginRsp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/{police_num}/logout": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "description": "user logout system",
+        "operationId": "userLogout",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "police_num",
+            "description": "the number of policeman",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/LogoutReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "logout respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/{police_num}/passwd/update": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "description": "user update self passwd",
+        "operationId": "usersPasswdUpdate",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "police_num",
+            "description": "the number of policeman",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/UpdatePasswdReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Update passwd respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/add": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "description": "add a new user",
+        "operationId": "usersAdd",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/UsersAddReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Update passwd respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/delete": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "description": "user update self passwd",
+        "operationId": "usersDelete",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/UsersDeleteReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Delete User respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/update": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "description": "update any users info",
+        "operationId": "usersUpdate",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/UsersUpdateReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "update any users info rsp",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "$ref": "#/definitions/ListMeetingRsp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/reset": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "description": "reset the user passwd.",
+        "operationId": "usersReset",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/UsersResetReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "reset the user passwd respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/{police_num}/info": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "description": "get the info of the police_num",
+        "operationId": "usersInfo",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "police_num",
+            "description": "the number of policeman",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/UsersInfoReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "get the info of the police_num respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/list": {
+      "get": {
+        "tags": [
+          "meeting"
+        ],
+        "description": "list the meeting currently",
+        "operationId": "listMeeting",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/ListMeetingReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "meeting list respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "$ref": "#/definitions/ListMeetingRsp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/join": {
+      "post": {
+        "tags": [
+          "meeting"
+        ],
+        "description": "join a meeting",
+        "operationId": "joinMeeting",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/JoinMeetingReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "join meeting respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/exit": {
+      "post": {
+        "tags": [
+          "meeting"
+        ],
+        "description": "exit a meeting",
+        "operationId": "exitMeeting",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/ExitMeetingReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "exit the meeting",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "$ref": "#/definitions/ExitMeetingReq"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/create": {
+      "post": {
+        "tags": [
+          "meeting"
+        ],
+        "description": "create a meeting",
+        "operationId": "createMeeting",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/CreateMeetingReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "create a meeting respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "$ref": "#/definitions/CreateMeetingRsp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/finish": {
+      "post": {
+        "tags": [
+          "meeting"
+        ],
+        "description": "create a meeting",
+        "operationId": "finishMeeting",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "req",
+            "schema": {
+              "$ref": "#/definitions/CreateMeetingReq"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "create a meeting respond",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status_code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "errors_desc": {
+                  "type": "string"
+                },
+                "payload": {
+                  "$ref": "#/definitions/CreateMeetingRsp"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CreateMeetingReq": {
+      "type": "object",
+      "properties": {
+        "sessiond_id": {
+          "type": "string"
+        },
+        "meeting_name": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateMeetingRsp": {
+      "type": "object",
+      "properties": {
+        "meeting_id": {
+          "type": "string"
+        }
+      }
+    },
+    "UsersInfoReq": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        }
+      }
+    },
+    "UsersResetReq": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "police_num": {
+          "type": "string"
+        }
+      }
+    },
+    "UsersUpdateReq": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "police_num": {
+          "type": "string"
+        },
+        "nick_name": {
+          "type": "string"
+        },
+        "orginization": {
+          "type": "string"
+        }
+      }
+    },
+    "UsersDeleteReq": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "police_num": {
+          "type": "string"
+        }
+      }
+    },
+    "JoinMeetingReq": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "meeting_id": {
+          "type": "string"
+        }
+      }
+    },
+    "UserInfo": {
+      "type": "object",
+      "properties": {
+        "nick_name": {
+          "type": "string"
+        },
+        "police_num": {
+          "type": "string"
+        },
+        "orginization": {
+          "type": "string"
+        }
+      }
+    },
+    "UsersAddReq": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UserInfo"
+          }
+        }
+      }
+    },
+    "UpdatePasswdReq": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        },
+        "new_passwd": {
+          "type": "string",
+          "format": "binary"
+        },
+        "old_passsed": {
+          "type": "string",
+          "format": "binary"
+        }
+      }
+    },
+    "LogoutReq": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        }
+      }
+    },
+    "LoginReq": {
+      "type": "object",
+      "properties": {
+        "passwd": {
+          "type": "string"
+        },
+        "mac_address": {
+          "type": "string"
+        }
+      }
+    },
+    "LoginRsp": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        }
+      }
+    },
+    "ListMeetingReq": {
+      "type": "object",
+      "properties": {
+        "sessiond_id": {
+          "type": "string"
+        }
+      }
+    },
+    "MeetingInfo": {
+      "type": "object",
+      "properties": {
+        "meeting_id": {
+          "type": "string"
+        },
+        "meeting_name": {
+          "type": "string"
+        },
+        "meeting_users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UserInfo"
+          }
+        }
+      }
+    },
+    "ListMeetingRsp": {
+      "type": "object",
+      "properties": {
+        "sessiond_id": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MeetingInfo"
+          }
+        }
+      }
+    },
+    "ExitMeetingReq": {
+      "type": "object",
+      "properties": {
+        "sessiond_id": {
+          "type": "string"
+        },
+        "meeting_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
