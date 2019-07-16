@@ -12,7 +12,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"gopkg.in/yaml.v2"
 	"os"
-	"reflect"
 )
 
 const(
@@ -73,6 +72,16 @@ type RestApiDef struct {
 	Produces []string `json:"produces" yaml:"produces" mapstructure:"produces"`
 	Parameters []interface{} `json:"parameters" yaml:"parameters" mapstructure:"parameters"`
 	Responses interface{} `json:"responses" yaml:"responses" mapstructure:"responses"`
+	OperationId string `json:"operationId" yaml:"operationId" mapstructure:"operationId"`
+}
+
+type ResponseDefinition struct {
+	Schema interface{} `mapstructure:"schema" yaml:"schema" json:"schema"`
+	Description string `mapstructure:"description" yaml:"description" json:"description"`
+}
+
+type Responses struct {
+	RespDefinitions map[string]*ResponseDefinition
 } 
 
 type RestApi struct {
@@ -120,7 +129,7 @@ func GetRestApi(swaggerMap map[string]interface{})(apis []*RestApi, err error)  
 	for url, desc := range paths.(map[interface{}]interface{}){
 		api := &RestApi{}
 		descMap := desc.(map[interface{}]interface{})
-		fmt.Println(reflect.TypeOf(url).Kind().String())
+		// fmt.Println(reflect.TypeOf(url).Kind().String())
 		if urlstr, ok :=  url.(string); ok{
 			//fmt.Printf("%s\n", urlstr)
 			api.Url = urlstr
@@ -157,6 +166,32 @@ func GetRestApi(swaggerMap map[string]interface{})(apis []*RestApi, err error)  
 				}
 
 				api.RestApiDef.Parameters[i] = p
+			}
+
+			if rsps, ok := api.Responses.(map[interface{}]interface{});ok{
+				rspsDef := &Responses{RespDefinitions: map[string]*ResponseDefinition{}}
+				for status, rspDef := range rsps{
+					r := &ResponseDefinition{}
+					if err := mapstructure.Decode(rspDef, &r); err != nil{
+						return nil, err
+					}
+
+					s := &Schema{}
+					if err := mapstructure.Decode(r.Schema, &s.Field); err != nil{
+						return nil, err
+					}
+
+					if len(s.Properties) != 0{
+						if err := properties(s.Properties); err != nil{
+							return nil, err
+						}
+					}
+
+					r.Schema = s
+					rspsDef.RespDefinitions[status.(string)] = r
+				}
+
+				api.Responses = rspsDef
 			}
 		}
 

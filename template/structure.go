@@ -46,7 +46,7 @@ type templateStructure map[string]string
 
 // TODO: 格式化为驼峰命名
 func inlineStructureName( structName, filedName string )(string, error)  {
-	return charset.HumpFormat(structName, filedName)
+	return charset.CamelCaseFormat(true, structName, filedName)
 }
 
 func filed( s templateStructure, fieldName string,
@@ -65,7 +65,7 @@ func filed( s templateStructure, fieldName string,
 			{
 				if 0 != len(field.Properties){
 					// 指向内置结构体的指针
-					if inStName, err := charset.HumpFormat(structName, fieldName); err != nil{
+					if inStName, err := charset.CamelCaseFormat(true, structName, fieldName); err != nil{
 						return fmt.Errorf("make strue name by [%s , %s]  : %v", structName, fieldName, err)
 					}else {
 						if err := structure(inStName, field.Properties); err != nil{
@@ -91,11 +91,19 @@ func filed( s templateStructure, fieldName string,
 						s[fieldName] = arr(ptrto(def.Name))
 					}
 				}else if items.Type != "" {
-					s[fieldName] = arr(items.Type)
+					switch items.Type {
+					case ObjectType:
+						s[fieldName] = arr(Interface)
+					default:
+						s[fieldName] = arr(items.Type)
+					}
+
 				}else {
 					return fmt.Errorf("the items of %s is not valid", structName)
 				}
 			}
+		case IntType:
+			s[fieldName] = field.Format
 		default:
 			s[fieldName] = field.Type
 		}
@@ -147,7 +155,7 @@ func fieldNameFormat(name string) string {
 		panic(fmt.Sprintf("filed name %s has included special charset.", name))
 	}
 
-	humpName, err := charset.HumpFormat(name)
+	humpName, err := charset.CamelCaseFormat(true, name)
 	if err != nil{
 		panic(err)
 	}

@@ -45,7 +45,7 @@ paths:
                 type: integer
                 format: int32
               errorsDesc:
-                type: object
+                type: string
               payload:
                 type: object
 
@@ -210,12 +210,12 @@ paths:
                 type: integer
                 format: int32
               errorsDesc:
-                type: object # 返回一个错误描述的数组
-                properties:
-                  policeNum:
-                    type: string
-                  passWd:
-                    type: string
+                type: string # 返回一个错误描述的数组
+                #properties:
+                #  policeNum:
+                #    type: string
+                #  passWd:
+                #    type: string
               payload:
                 $ref: '#/definitions/LoginRsp'
 
@@ -338,11 +338,10 @@ paths:
       produces:
       - 'application/json'
       parameters:
-      - in : body
-        name: req
+      - in : query
+        name: sessionId
         required: true
-        schema:
-          $ref: '#/definitions/ListMeetingReq'
+        type: string
 
       responses:
         default:
@@ -961,9 +960,13 @@ definitions:
         type: string
       policeNum:
         type: string
+      createTimeStamp:
+        type: integer
+        format: int64
     required:
     - sessionId
     - policeNum
+    - createTimeStamp
 
   UsersListRsp:
     type: object
@@ -1151,4 +1154,3 @@ definitions:
         type: string
     required:
     - sessionId
-    
