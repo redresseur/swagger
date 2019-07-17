@@ -22,12 +22,12 @@ func {{$method.Name}}(ctx *gin.Context){
 
     {{range $index, $res := $method.Returns}}{{$resCode := $res.StatusCode|atoi}}{{if (and (ge $resCode 100) (lt $resCode 200)) }}if {{$res.Name}} != nil {
         data, _ := json.Marshal({{$res.Name}})
- 		 ctx.Writer.Write(data)
+ 		ctx.Writer.Write(data)
         ctx.Writer.WriteHeader(statusCode)
         return
     }{{end}}{{if (and (ge $resCode 200) (lt $resCode 300)) }}if {{$res.Name}} != nil {
         data, _ := json.Marshal({{$res.Name}})
-		 ctx.Writer.Write(data)
+		ctx.Writer.Write(data)
         ctx.Writer.WriteHeader(statusCode)
         return
     }{{end}}{{if (and (ge $resCode 300) (lt $resCode 400)) }}if {{$res.Name}} != nil {
@@ -37,12 +37,12 @@ func {{$method.Name}}(ctx *gin.Context){
         return
     }{{end}}{{if (and (ge $resCode 400) (lt $resCode 500)) }}if {{$res.Name}} != nil {
         data, _ := json.Marshal({{$res.Name}})
-		 ctx.Writer.Write(data)
+		ctx.Writer.Write(data)
         ctx.Writer.WriteHeader(statusCode)
         return
     }{{end}}{{if (and (ge $resCode 500) (lt $resCode 600)) }}if {{$res.Name}} != nil {
         data, _ := json.Marshal({{$res.Name}})
-		 ctx.Writer.Write(data)
+		ctx.Writer.Write(data)
         ctx.Writer.WriteHeader(statusCode)
         return
     }{{end}}{{end}}

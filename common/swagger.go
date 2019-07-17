@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"strings"
 )
 
 type PathDescription struct {
@@ -49,6 +50,11 @@ func WithHost(h string) BindOptions {
 }
 
 
+func ginMethod(m string)string  {
+	//m = strings.ToLower(m)
+	return strings.ToUpper(m)
+}
+
 // TODO: 添加組管理
 func RouterBind(engine *gin.Engine, description []byte, Operation func(operationId string)func(*gin.Context), bindOptions... BindOptions) error {
 	apiDescs := Descriptions{}
@@ -62,9 +68,9 @@ func RouterBind(engine *gin.Engine, description []byte, Operation func(operation
 		op()
 	}
 
-	routerGroup := engine.Group(basePath)
+	routerGroup := engine.Group(basePath, middles...)
 	for _, desc := range apiDescs.PathDescs{
-		routerGroup.Handle(desc.Method, desc.Url, Operation(desc.OperationId))
+		routerGroup.Handle(ginMethod(desc.Method), desc.Url, Operation(desc.OperationId))
 	}
 
 	return nil
