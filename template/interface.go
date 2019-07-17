@@ -1,4 +1,11 @@
 package template
+
+/*
+	introduce: generate interface
+	date: 2019/07/15
+	author: wangzhipengtest@163.com
+*/
+
 import (
 	"errors"
 	"fmt"
@@ -13,12 +20,6 @@ const (
 	StringType  = `string`
 	IntType = `integer`
 )
-
-/*
-	introduce: generate interface
-	date: 2019/07/15
-	author: wangzhipengtest@163.com
-*/
 
 type Param map[string]string
 
