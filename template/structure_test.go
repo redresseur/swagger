@@ -2,6 +2,7 @@ package template
 
 import (
 	"github.com/redresseur/swagger/analyse"
+	"os"
 	"testing"
 )
 
@@ -21,10 +22,12 @@ func TestDefinitionComplete(t *testing.T)  {
 		t.Fatalf("TestGetDefinition %v", err)
 	}
 
-	definitionComplete(defs)
+	if err := DefinitionComplete(defs); err != nil{
+		t.Fatalf("TestGetDefinition %v", err)
+	}
 }
 
 func TestOutputStructureCode(t *testing.T)  {
 	TestDefinitionComplete(t)
-	t.Logf("TestOutputStructureCode %v", outputStructureCode())
+	t.Logf("TestOutputStructureCode %v", OutputStructureCode(os.Stdout))
 }

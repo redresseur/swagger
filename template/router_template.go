@@ -1,4 +1,6 @@
-package apis
+package template
+
+const routerTemplate = `package apis
 
 import (
     "./definitions"
@@ -55,4 +57,4 @@ func {{$method.Name}}(ctx *gin.Context){
 }
 {{end}}
 
-{{$input|objects}}
+{{$input|objects}}`

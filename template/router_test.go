@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestInterfaceComplete(t *testing.T)  {
+func TestRouterComplete(t *testing.T)  {
 	res, err := analyse.ReadYaml(yamlPath);
 	if  err != nil{
 		t.Fatalf("TestInterfaceComplete %v", err)
@@ -28,10 +28,10 @@ func TestInterfaceComplete(t *testing.T)  {
 	if err := InterfaceComplete(apis); err != nil{
 		t.Fatalf("TestInterfaceComplete %v", err)
 	}
-}
 
-func TestOutputInterfaceCode(t *testing.T)  {
-	TestInterfaceComplete(t)
+	if err := RouterComplete(apis); err != nil {
+		t.Fatalf("TestInterfaceComplete %v", err)
+	}
 
 	if err := OutputInterfaceCode(os.Stdout); err != nil{
 		t.Fatalf("TestOutputInterfaceCode %v", err)
@@ -40,5 +40,8 @@ func TestOutputInterfaceCode(t *testing.T)  {
 	if err := OutputStructureCode(os.Stdout); err != nil{
 		t.Fatalf("TestOutputInterfaceCode %v", err)
 	}
-}
 
+	if err := OutputRouterCode(os.Stdout); err != nil{
+		t.Fatalf("TestInterfaceComplete %v", err)
+	}
+}

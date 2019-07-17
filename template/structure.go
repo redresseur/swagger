@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"github.com/redresseur/swagger/analyse"
 	"github.com/redresseur/utils/charset"
+	"io"
+	"io/ioutil"
 	"os"
 	//"path/filepath"
 	tt "text/template"
@@ -126,7 +128,7 @@ func structure(structName string, Properties map[string]interface{}) error {
 }
 
 // 拼装结构体定义 用于生成结构体代码
-func definitionComplete(defs []*analyse.Definition) error {
+func DefinitionComplete(defs []*analyse.Definition) error {
 	// 緩存所有的def, 用于做索引補全
 	for _, def := range defs{
 		path := DefinitionPrefix + def.Name
@@ -143,11 +145,6 @@ func definitionComplete(defs []*analyse.Definition) error {
 	return nil
 }
 
-const template  = `{{$input:=.}}{{range $structureName, $structure := $input}}
-type {{$structureName}}{{$filedNum := $structure|len}} struct{
-    {{range $fieldName, $fieldType := $structure}}{{$fieldName|fieldNameFormat}} {{$fieldType}} `+ "`" + `json:"{{$fieldName}}"` + "`\n" +
-`{{with $filedNum =  (sub $filedNum 1) }}{{if (gt $filedNum 0)}}    {{end}}{{end}}{{end}}}
-{{end}}`
 
 // 駝峰命名
 func fieldNameFormat(name string) string {
@@ -166,15 +163,48 @@ func sub(a int, b int) int {
 	return a - b
 }
 
-func outputStructureCode()error{
+func OutputStructureCodeWithTemplate(writer io.Writer, path string) error {
+	if fd, err := os.Open(path); err != nil{
+		return err
+	}else {
+		if data, err := ioutil.ReadAll(fd); err != nil{
+			return err
+		}else {
+			funcMap := tt.FuncMap{
+				"fieldNameFormat": fieldNameFormat,
+				"sub": sub,
+				"excludePtr": excludePtr,
+				"atoi": atoi,
+			}
+
+			if t, err := tt.New("structure").Funcs(funcMap).Parse(string(data));err != nil{
+				return err
+			}else {
+				if err := t.Execute(writer, globalStructures); err != nil{
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func OutputStructureCode(writer io.Writer)error{
 	funcMap := tt.FuncMap{
 		"fieldNameFormat": fieldNameFormat,
 		"sub": sub,
-	}
-	t, err := tt.New("structure").Funcs(funcMap).Parse(string(template))
-	if  err != nil{
-		return  err
+		"excludePtr": excludePtr,
+		"atoi": atoi,
 	}
 
-	return t.Execute(os.Stdout, globalStructures)
+	if t, err := tt.New("structure").Funcs(funcMap).Parse(structureTemplate);err != nil{
+		return err
+	}else {
+		if err := t.Execute(writer, globalStructures); err != nil{
+			return err
+		}
+	}
+
+	return nil
 }

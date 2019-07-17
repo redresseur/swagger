@@ -63,6 +63,7 @@ type Parameter struct {
 	In string `json:"in" yaml:"in" mapstructure:"in"`
 	Name string `json:"name" yaml:"name" mapstructure:"name"`
 	Type string `json:"type" yaml:"type" mapstructure:"type"`
+	Format string `json:"format" yaml:"format" mapstructure:"format"`
 	Schema interface{} `json:"schema" yaml:"schema" mapstructure:"schema"`
 }
 
@@ -84,6 +85,7 @@ type Responses struct {
 	RespDefinitions map[string]*ResponseDefinition
 } 
 
+// TODO: 支持一个Path下添加多个请求类型
 type RestApi struct {
 	Url string
 	Method string

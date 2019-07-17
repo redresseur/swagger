@@ -823,6 +823,14 @@ paths:
           description: alloct control permission respond
           schema:
             type: object
+            properties:
+              errorsFlag:
+                type: integer
+                format: int32
+              errorsDesc:
+                type: string
+              payload:
+                type: object
 
   # 参与者释放控制权限
   /meeting/{meeting_id}/permission/control/release:
@@ -862,7 +870,6 @@ paths:
               payload:
                 type: object
 
-
 definitions:
   UserInfo:
     type: object
@@ -874,10 +881,14 @@ definitions:
         # required: true
       organization:
         type: string
+      createTimeStamp:
+        type: integer
+        format: int64
     required:
     - nickName
     - policeNum
     - organization
+    - createTimeStamp
 
   UsersAddReq:
     type: object
@@ -960,13 +971,9 @@ definitions:
         type: string
       policeNum:
         type: string
-      createTimeStamp:
-        type: integer
-        format: int64
     required:
     - sessionId
     - policeNum
-    - createTimeStamp
 
   UsersListRsp:
     type: object
@@ -1068,12 +1075,12 @@ definitions:
   ListMeetingsRsp:
     type: object
     properties:
-      sessionId:
+      meetings:
         type: array
         items:
           $ref: "#/definitions/MeetingInfo"
     required:
-    - sessionId
+    - meetings
 
   ExitMeetingReq:
     type: object

@@ -1,3 +1,4 @@
+package definitions
 {{$input:=.}}{{range $structureName, $structure := $input}}
 type {{$structureName}}{{$filedNum := $structure|len}} struct{
     {{range $fieldName, $fieldType := $structure}}{{$fieldName|fieldNameFormat}} {{$fieldType}} `json:"{{$fieldName}}"`

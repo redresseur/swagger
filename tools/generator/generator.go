@@ -1,0 +1,84 @@
+package main
+
+import (
+	"flag"
+	"github.com/redresseur/swagger/analyse"
+	"github.com/redresseur/swagger/template"
+	"github.com/redresseur/utils/ioutils"
+	"path/filepath"
+)
+
+var (
+	swagger  = `swagger`
+	output = `output`
+)
+
+func main(){
+	flag.StringVar(&swagger, swagger,"swagger.yaml", "swagger template, only support yaml")
+	flag.StringVar(&output, output,"./" , "output dir")
+	flag.Parse()
+
+	data, err := analyse.ReadYaml(swagger)
+	if err != nil{
+		panic(err)
+	}
+
+	defs, err := analyse.GetDefinition(data)
+	if  err != nil{
+		panic(err)
+	}
+
+	if err := template.DefinitionComplete(defs); err != nil{
+		panic(err)
+	}
+
+	apis, err := analyse.GetRestApi(data)
+	if err != nil{
+		panic(err)
+	}
+
+	if err := template.InterfaceComplete(apis); err != nil{
+		panic(err)
+	}
+
+	if err := template.RouterComplete(apis); err != nil {
+		panic(err)
+	}
+
+	if _, err := ioutils.CreateDirIfMissing(filepath.Join(output, "definitions")); err != nil{
+		panic(err)
+	}
+
+	interfaceOut ,err := ioutils.OpenFile(filepath.Join(output, "definitions", "interface.go"), "")
+	if err != nil{
+		panic(err)
+	}else {
+		defer interfaceOut.Close()
+	}
+
+	if err := template.OutputInterfaceCode(interfaceOut); err != nil{
+		panic(err)
+	}
+
+	structureOut, err := ioutils.OpenFile(filepath.Join(output, "definitions", "structure.go"), "")
+	if err != nil{
+		panic(err)
+	}else {
+		defer structureOut.Close()
+	}
+
+	if err := template.OutputStructureCode(structureOut); err != nil{
+		panic(err)
+	}
+
+	apisOutput, err := ioutils.OpenFile(filepath.Join(output, "apis.go"), "")
+	if err != nil{
+		panic(err)
+	}else {
+		defer apisOutput.Close()
+	}
+
+	if err := template.OutputRouterCode(apisOutput); err != nil{
+		panic(err)
+	}
+}

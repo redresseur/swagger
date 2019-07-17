@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/redresseur/swagger/analyse"
 	"github.com/redresseur/utils/charset"
+	"io"
 	"io/ioutil"
 	"os"
 	tt "text/template"
@@ -21,12 +22,30 @@ const (
 	IntType = `integer`
 )
 
-type Param map[string]string
+type Param struct {
+	IN string
+	SwaggerType string `desc:"在swagger中定义的类型"`
+	Type string `desc:"实际代码中定义的类型"`
+	Key string
+	Name string
+}
+
+type Result struct {
+	StatusCode string `desc:"返回對應的狀態碼"`
+	Type string `desc:"實際代碼中的類型"`
+	SwaggerType string `desc:"在swagger中定義的類型"`
+	// Key string
+	Name string
+}
+
+//type Param map[string]string
 
 type method struct {
 	Name string
-	Parameters Param
-	Returns Param
+	Parameters []*Param
+	Returns []*Result
+	MethodType string `desc:"請求的類型：GET POST OPTIONS DELETE PUT TRACE HEADER CONNECT"`
+	Url string
 }
 
 var (
@@ -38,7 +57,9 @@ var (
 )
 
 func apiMethod (api *analyse.RestApi)(m *method, err error) {
-	m = &method{Parameters:Param{}}
+	m = &method{}
+	m.MethodType = api.Method
+	m.Url = api.Url
 	if m.Name, err = charset.CamelCaseFormat(true, api.OperationId); err != nil{
 		return nil, err
 	}
@@ -53,7 +74,13 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 				if def, ok :=  globalDefs[s.Reference]; !ok{
 					return nil, fmt.Errorf("the reference %s is not valide", s.Reference)
 				}else {
-					m.Parameters[p.Name] = ptrto(def.Name)
+					m.Parameters =append(m.Parameters, &Param{
+						SwaggerType: ObjectType,
+						Type: ptrto(def.Name),
+						IN: p.In,
+						Key: p.Name,
+						Name: charset.CamelCaseFormatMust(false, p.Name),
+					})
 				}
 			}else {
 				// TODO: 支持除了引用之外的其他类型，例如： object 等
@@ -64,11 +91,23 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 			switch (p.Type){
 			case StringType:
 				{
-					m.Parameters[p.Name] = StringType
+					m.Parameters =append(m.Parameters, &Param{
+						SwaggerType: StringType,
+						Type: StringType,
+						IN: p.In,
+						Key: p.Name,
+						Name: charset.CamelCaseFormatMust(false, p.Name),
+					})
 				}
 			case IntType:
 				{
-					m.Parameters[p.Name] = IntType
+					m.Parameters = append(m.Parameters, &Param{
+						SwaggerType: IntType,
+						Type: p.Format,
+						IN: p.In,
+						Key: p.Name,
+						Name: charset.CamelCaseFormatMust(false, p.Name),
+					})
 				}
 			default:
 				return nil, fmt.Errorf("the param type %s is not supported", p.Type)
@@ -83,7 +122,6 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 		return m, nil
 	}
 
-	m.Returns = Param{}
 	for statusCode, rspDef := range responses.RespDefinitions{
 		s, ok := rspDef.Schema.(*analyse.Schema);
 		if  !ok{
@@ -96,7 +134,12 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 				return nil, fmt.Errorf("the reference %s is not valide", s.Reference)
 			}else {
 				rspName, _ := charset.CamelCaseFormat(false, "rsp", statusCode)
-				m.Returns[rspName] = ptrto(def.Name)
+				m.Returns = append(m.Returns, &Result{
+					Type: ptrto(def.Name),
+					SwaggerType: ObjectType,
+					StatusCode: statusCode,
+					Name: rspName,
+				})
 				continue
 			}
 		}
@@ -111,15 +154,31 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 						return nil, err
 					}else {
 						rspName, _ := charset.CamelCaseFormat(false,"rsp", statusCode)
-						m.Returns[rspName] = ptrto(rspObjectName)
+						m.Returns =append(m.Returns, &Result{
+							Type: ptrto(rspObjectName),
+							SwaggerType: ObjectType,
+							StatusCode: statusCode,
+							Name:rspName,
+						})
 					}
 				}
 			}else {
 				rspName, _ := charset.CamelCaseFormat(false,"rsp", statusCode)
-				m.Returns[rspName] = Interface
+				m.Returns = append(m.Returns, &Result{
+					Type: Interface,
+					SwaggerType: ObjectType,
+					StatusCode: statusCode,
+					Name: rspName,
+				})
 			}
 		case IntType:
-			m.Returns[statusCode] = s.Format
+			rspName, _ := charset.CamelCaseFormat(false,"rsp", statusCode)
+			m.Returns = append(m.Returns,  &Result{
+				Type: s.Format,
+				SwaggerType: IntType,
+				StatusCode: statusCode,
+				Name: rspName,
+			})
 		case ArrayType:
 			if s.Items == nil{
 				err = errors.New("the items' definition are empty")
@@ -133,15 +192,30 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 					return
 				}else {
 					rspName, _ := charset.CamelCaseFormat(false,"rsp", statusCode)
-					m.Returns[rspName] = arr(ptrto(def.Name))
+					m.Returns = append(m.Returns, &Result{
+						Type: arr(ptrto(def.Name)),
+						SwaggerType: ArrayType,
+						StatusCode: statusCode,
+						Name: rspName,
+					})
 				}
 			}else if items.Type != "" {
 				if items.Type == ObjectType {
 					rspName, _ := charset.CamelCaseFormat(false,"rsp", statusCode)
-					m.Returns[rspName] = arr(Interface)
+					m.Returns =append(m.Returns, &Result{
+						Type: arr(Interface),
+						SwaggerType: ArrayType,
+						StatusCode: statusCode,
+						Name: rspName,
+					})
 				} else {
 					rspName, _ := charset.CamelCaseFormat(false,"rsp", statusCode)
-					m.Returns[rspName] = arr(items.Type)
+					m.Returns = append(m.Returns, &Result{
+						Type: arr(items.Type),
+						SwaggerType: ArrayType,
+						StatusCode: statusCode,
+						Name: rspName,
+					})
 				}
 			}else {
 				err = fmt.Errorf("the items is not valid" )
@@ -149,7 +223,12 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 			}
 		default:
 			rspName, _ := charset.CamelCaseFormat(false,"rsp", statusCode)
-			m.Returns[rspName] = s.Type
+			m.Returns =  append(m.Returns, &Result{
+				Type: s.Type,
+				SwaggerType: s.Type,
+				StatusCode: statusCode,
+				Name: rspName,
+			})
 		}
 	}
 
@@ -162,7 +241,7 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 // 		- child
 //		- parent
 // 最终child 接口会被parent接口所包含
-func interfaceComplete(restFulApis []*analyse.RestApi) error {
+func InterfaceComplete(restFulApis []*analyse.RestApi) error {
 	for _, api := range restFulApis{
 		if len(api.Tags) == 0{
 			return ErrTagsNotExist
@@ -183,8 +262,26 @@ func interfaceComplete(restFulApis []*analyse.RestApi) error {
 	return nil	
 }
 
-func outputInterfaceCode()error  {
-	if fd, err := os.Open("interface.tpl"); err != nil{
+func OutputInterfaceCode(writer io.Writer)error  {
+	funcMap := tt.FuncMap{
+		"fieldNameFormat": fieldNameFormat,
+		"sub": sub,
+	}
+
+	if t, err := tt.New("interface").Funcs(funcMap).Parse(string(interfaceTemplate));err != nil{
+		return err
+	}else {
+		if err := t.Execute(writer, globalMethods); err != nil{
+			return err
+		}
+	}
+
+	return nil
+}
+
+
+func OutputInterfaceCodeWithTemplate(writer io.Writer, Path string)error  {
+	if fd, err := os.Open(Path); err != nil{
 		return err
 	}else {
 		if data, err := ioutil.ReadAll(fd); err != nil{
@@ -198,7 +295,7 @@ func outputInterfaceCode()error  {
 			if t, err := tt.New("interface").Funcs(funcMap).Parse(string(data));err != nil{
 				return err
 			}else {
-				if err := t.Execute(os.Stdout, globalMethods); err != nil{
+				if err := t.Execute(writer, globalMethods); err != nil{
 					return err
 				}
 			}
