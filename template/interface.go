@@ -56,15 +56,15 @@ var (
 	ErrTagsNotExist = errors.New("the list of tags was empty.")
 )
 
-func apiMethod (api *analyse.RestApi)(m *method, err error) {
+func apiMethod (url , meth string, def *analyse.RestApiDef)(m *method, err error) {
 	m = &method{}
-	m.MethodType = api.Method
-	m.Url = api.Url
-	if m.Name, err = charset.CamelCaseFormat(true, api.OperationId); err != nil{
+	m.MethodType = meth
+	m.Url = url
+	if m.Name, err = charset.CamelCaseFormat(true, def.OperationId); err != nil{
 		return nil, err
 	}
 
-	for _, param := range  api.Parameters{
+	for _, param := range  def.Parameters{
 		p := param.(*analyse.Parameter)
 		// 檢查Schema 是否為空
 		if p.Schema != nil{
@@ -117,9 +117,10 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 	}
 
 	// 提取responses
-	responses, ok := api.Responses.(*analyse.Responses);
+	responses, ok := def.Responses.(*analyse.Responses);
 	if  !ok{
-		return m, nil
+		//return m, nil
+		return nil, fmt.Errorf("the repsonses of %s is empty in [%s] case", m.Url, meth)
 	}
 
 	for statusCode, rspDef := range responses.RespDefinitions{
@@ -232,7 +233,7 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 		}
 	}
 
-	return m, nil
+	return
 }
 
 // api 的定义中必须要有tags
@@ -243,20 +244,22 @@ func apiMethod (api *analyse.RestApi)(m *method, err error) {
 // 最终child 接口会被parent接口所包含
 func InterfaceComplete(restFulApis []*analyse.RestApi) error {
 	for _, api := range restFulApis{
-		if len(api.Tags) == 0{
-			return ErrTagsNotExist
-		}
+		for meth, def := range api.RestApiDefs{
+			if len(def.Tags) == 0{
+				return ErrTagsNotExist
+			}
 
-		// 用 tag[0] 作为interface 的名称
-		interfaceName, err := charset.CamelCaseFormat(true, api.Tags[0])
-		if err != nil{
-			return err
-		}
+			// 用 tag[0] 作为interface 的名称
+			interfaceName, err := charset.CamelCaseFormat(true, def.Tags[0])
+			if err != nil{
+				return err
+			}
 
-		if m, err := apiMethod(api); err != nil{
-			return err
-		} else {
-			globalMethods[interfaceName]= append(globalMethods[interfaceName], m)
+			if m, err := apiMethod(api.Url, meth, def); err != nil{
+				return err
+			} else {
+				globalMethods[interfaceName]= append(globalMethods[interfaceName], m)
+			}
 		}
 	}
 	return nil	

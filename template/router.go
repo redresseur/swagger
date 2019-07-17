@@ -26,10 +26,10 @@ const (
 	Default = `default`
 )
 
-func router( api *analyse.RestApi) (*Router, error) {
+func router( def *analyse.RestApiDef) (*Router, error) {
 	res := &Router{}
 
-	interfaceName, err := charset.CamelCaseFormat(true, api.Tags[0])
+	interfaceName, err := charset.CamelCaseFormat(true, def.Tags[0])
 	if err != nil{
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func router( api *analyse.RestApi) (*Router, error) {
 		return nil, fmt.Errorf("the interface %s is valid", interfaceName)
 	}
 
-	methodName, err := charset.CamelCaseFormat(true, api.OperationId)
+	methodName, err := charset.CamelCaseFormat(true, def.OperationId)
 	if err != nil{
 		return nil, err
 	}
@@ -63,14 +63,16 @@ func router( api *analyse.RestApi) (*Router, error) {
 
 func RouterComplete(restFulApis []*analyse.RestApi) error {
 	for _, api := range restFulApis{
-		if len(api.Tags) == 0{
-			return ErrTagsNotExist
-		}
+		for _, def := range api.RestApiDefs{
+			if len(def.Tags) == 0{
+				return ErrTagsNotExist
+			}
 
-		if r, err := router(api); err != nil{
-			return err
-		}else {
-			globalRouters = append(globalRouters, r)
+			if r, err := router(def); err != nil{
+				return err
+			}else {
+				globalRouters = append(globalRouters, r)
+			}
 		}
 	}
 	return nil

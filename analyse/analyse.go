@@ -88,8 +88,8 @@ type Responses struct {
 // TODO: 支持一个Path下添加多个请求类型
 type RestApi struct {
 	Url string
-	Method string
-	RestApiDef
+	// Method string
+	RestApiDefs map[string] *RestApiDef `desc:"key = method, value = definition"`
 }
 
 type Items struct {
@@ -129,7 +129,7 @@ func GetRestApi(swaggerMap map[string]interface{})(apis []*RestApi, err error)  
 	}
 
 	for url, desc := range paths.(map[interface{}]interface{}){
-		api := &RestApi{}
+		api := &RestApi{RestApiDefs: map[string]*RestApiDef{}}
 		descMap := desc.(map[interface{}]interface{})
 		// fmt.Println(reflect.TypeOf(url).Kind().String())
 		if urlstr, ok :=  url.(string); ok{
@@ -138,17 +138,19 @@ func GetRestApi(swaggerMap map[string]interface{})(apis []*RestApi, err error)  
 		}
 
 		for key, value := range descMap{
-			//fmt.Printf("%s\n", key)
-			if keystr, ok := key.(string); ok{
-				api.Method = keystr
+			method, ok := key.(string)
+			if  !ok{
+				return nil, fmt.Errorf("the key %v is not invaild", method)
 			}
 
-			if err = mapstructure.Decode(value, &api.RestApiDef); err != nil{
+			def := &RestApiDef{}
+			api.RestApiDefs[method] = def
+			if err = mapstructure.Decode(value, def); err != nil{
 				fmt.Printf("%v", err)
 				return nil, err
 			}
 
-			for i, param := range api.RestApiDef.Parameters{
+			for i, param := range def.Parameters{
 				p := &Parameter{}
 				if err = mapstructure.Decode(param, p);err != nil{
 					fmt.Printf("%v", err)
@@ -167,10 +169,10 @@ func GetRestApi(swaggerMap map[string]interface{})(apis []*RestApi, err error)  
 					}
 				}
 
-				api.RestApiDef.Parameters[i] = p
+				def.Parameters[i] = p
 			}
 
-			if rsps, ok := api.Responses.(map[interface{}]interface{});ok{
+			if rsps, ok := def.Responses.(map[interface{}]interface{});ok{
 				rspsDef := &Responses{RespDefinitions: map[string]*ResponseDefinition{}}
 				for status, rspDef := range rsps{
 					r := &ResponseDefinition{}
@@ -193,7 +195,7 @@ func GetRestApi(swaggerMap map[string]interface{})(apis []*RestApi, err error)  
 					rspsDef.RespDefinitions[status.(string)] = r
 				}
 
-				api.Responses = rspsDef
+				def.Responses = rspsDef
 			}
 		}
 
