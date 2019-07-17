@@ -55,6 +55,12 @@ func ginMethod(m string)string  {
 	return strings.ToUpper(m)
 }
 
+func urlParamTransfer(url string)string{
+	url = strings.ReplaceAll(url, "{", ":"  )
+	url = strings.ReplaceAll(url, "}", ""  )
+	return url
+}
+
 // TODO: 添加組管理
 func RouterBind(engine *gin.Engine, description []byte, Operation func(operationId string)func(*gin.Context), bindOptions... BindOptions) error {
 	apiDescs := Descriptions{}
@@ -70,7 +76,7 @@ func RouterBind(engine *gin.Engine, description []byte, Operation func(operation
 
 	routerGroup := engine.Group(basePath, middles...)
 	for _, desc := range apiDescs.PathDescs{
-		routerGroup.Handle(ginMethod(desc.Method), desc.Url, Operation(desc.OperationId))
+		routerGroup.Handle(ginMethod(desc.Method), urlParamTransfer(desc.Url), Operation(desc.OperationId))
 	}
 
 	return nil
