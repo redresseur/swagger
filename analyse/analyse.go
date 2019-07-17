@@ -122,6 +122,22 @@ type Schema struct {
 	Field
 }
 
+func GetHost(swaggerMap map[string]interface{}) string {
+	if host, ok := swaggerMap[HOST]; ok{
+		return host.(string)
+	}
+
+	return "localhost:8080"
+}
+
+func GetBasePath(swaggerMap map[string]interface{}) string {
+	if base, ok := swaggerMap[BASEPATH]; ok{
+		return base.(string)
+	}
+
+	return "/"
+}
+
 func GetRestApi(swaggerMap map[string]interface{})(apis []*RestApi, err error)  {
 	paths, ok := swaggerMap[PATHS]
 	if ! ok{

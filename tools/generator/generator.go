@@ -81,4 +81,16 @@ func main(){
 	if err := template.OutputRouterCode(apisOutput); err != nil{
 		panic(err)
 	}
+
+	template.DescriptionComplete(analyse.GetHost(data), analyse.GetBasePath(data))
+	descOutput, err := ioutils.OpenFile(filepath.Join(output, "descriptions.go"), "")
+	if err != nil{
+		panic(err)
+	}else {
+		defer descOutput.Close()
+	}
+
+	if err := template.OutputDescription(descOutput); err != nil{
+		panic(err)
+	}
 }

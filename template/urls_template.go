@@ -1,4 +1,6 @@
-package apis
+package template
+
+const urlsTemplate  = `package apis
 
 import(
     "github.com/gin-gonic/gin"
@@ -12,4 +14,4 @@ func Operation(operationId string)func(*gin.Context){
    return operations[operationId]
 }
 
-{{$input.Descriptions|apiDescription}}
+{{$input.Descriptions|apiDescription}}`
