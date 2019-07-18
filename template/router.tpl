@@ -22,32 +22,44 @@ func {{$method.Name}}(ctx *gin.Context){
 
     {{range $index, $res := $method.Returns}}{{$resCode := $res.StatusCode|atoi}}{{if (and (ge $resCode 100) (lt $resCode 200)) }}if {{$res.Name}} != nil {
         data, _ := json.Marshal({{$res.Name}})
- 		ctx.Writer.Write(data)
+        ctx.Writer.Header().Set("Content-Type", "application/json")
+		 ctx.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
+ 		 ctx.Writer.Write(data)
         ctx.Writer.WriteHeader(statusCode)
         return
     }{{end}}{{if (and (ge $resCode 200) (lt $resCode 300)) }}if {{$res.Name}} != nil {
         data, _ := json.Marshal({{$res.Name}})
-		ctx.Writer.Write(data)
+        ctx.Writer.Header().Set("Content-Type", "application/json")
+		 ctx.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
+		 ctx.Writer.Write(data)
         ctx.Writer.WriteHeader(statusCode)
         return
     }{{end}}{{if (and (ge $resCode 300) (lt $resCode 400)) }}if {{$res.Name}} != nil {
         data, _ := json.Marshal({{$res.Name}})
+		 ctx.Writer.Header().Set("Content-Type", "application/json")
+		 ctx.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
         ctx.Writer.Write(data)
         ctx.Writer.WriteHeader(statusCode)
         return
     }{{end}}{{if (and (ge $resCode 400) (lt $resCode 500)) }}if {{$res.Name}} != nil {
         data, _ := json.Marshal({{$res.Name}})
-		ctx.Writer.Write(data)
+        ctx.Writer.Header().Set("Content-Type", "application/json")
+		 ctx.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
+		 ctx.Writer.Write(data)
         ctx.Writer.WriteHeader(statusCode)
         return
     }{{end}}{{if (and (ge $resCode 500) (lt $resCode 600)) }}if {{$res.Name}} != nil {
         data, _ := json.Marshal({{$res.Name}})
-		ctx.Writer.Write(data)
+		 ctx.Writer.Header().Set("Content-Type", "application/json")
+		 ctx.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
+		 ctx.Writer.Write(data)
         ctx.Writer.WriteHeader(statusCode)
         return
     }{{end}}{{end}}
     {{range $index, $res := $method.Returns}}{{$resCode := $res.StatusCode|atoi}}{{if (eq $resCode -1) }}if {{$res.Name}} != nil {
         data, _ := json.Marshal({{$res.Name}})
+		 ctx.Writer.Header().Set("Content-Type", "application/json")
+		 ctx.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
         ctx.Writer.Write(data)
         ctx.Writer.WriteHeader(statusCode)
         return

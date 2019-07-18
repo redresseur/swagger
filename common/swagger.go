@@ -92,12 +92,7 @@ func addHeader(ctx *gin.Context) {
 
 func Cros(ctx *gin.Context) {
 	// filter
-	// addHeader(ctx)
-	if ctx.Request.Method == "OPTIONS"{
-		// add header
-		addHeader(ctx)
-		// return
-	}
+	addHeader(ctx)
 	// 判断 SessionId
 	ctx.Next()
 }
