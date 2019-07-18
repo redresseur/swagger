@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"strings"
 )
 
@@ -26,14 +27,21 @@ type SwaggerApiConf struct {
 type BindOptions func ()
 
 var (
-	middles []gin.HandlerFunc
+	globalMiddles []gin.HandlerFunc
+	groupMiddles []gin.HandlerFunc
 	basePath string
 	host string
 )
 
-func WithMiddleWare(middle gin.HandlerFunc ) BindOptions  {
-	return func(  ) {
-		middles = append(middles, middle)
+func WithGlobalMiddleWare(middle gin.HandlerFunc ) BindOptions  {
+	return func() {
+		globalMiddles = append(globalMiddles, middle)
+	}
+}
+
+func WithGroupMiddleWare(middle gin.HandlerFunc) BindOptions {
+	return func() {
+		groupMiddles = append(groupMiddles, middle)
 	}
 }
 
@@ -74,7 +82,8 @@ func RouterBind(engine *gin.Engine, description []byte, Operation func(operation
 		op()
 	}
 
-	routerGroup := engine.Group(basePath, middles...)
+	engine.Use(globalMiddles...)
+	routerGroup := engine.Group(basePath, groupMiddles...)
 	for _, desc := range apiDescs.PathDescs{
 		routerGroup.Handle(ginMethod(desc.Method), urlParamTransfer(desc.Url), Operation(desc.OperationId))
 	}
@@ -91,8 +100,16 @@ func addHeader(ctx *gin.Context) {
 }
 
 func Cros(ctx *gin.Context) {
-	// filter
+	// add header
 	addHeader(ctx)
+
+	// filter
+	// 所有option全部跳过
+	if strings.ToLower(ctx.Request.Method) == `options`{
+		ctx.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
 	// 判断 SessionId
 	ctx.Next()
 }
