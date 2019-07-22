@@ -20,6 +20,7 @@ import (
 const (
 	StringType  = `string`
 	IntType = `integer`
+	BooleanType = `boolean`
 )
 
 type Param struct {
@@ -111,6 +112,16 @@ func apiMethod (url , meth string, def *analyse.RestApiDef)(m *method, err error
 						Name: charset.CamelCaseFormatMust(false, p.Name),
 					})
 				}
+			case BooleanType:
+				{
+					m.Parameters = append(m.Parameters, &Param{
+						SwaggerType: BooleanType,
+						Type: `bool`,
+						IN: p.In,
+						Key: p.Name,
+						Name: charset.CamelCaseFormatMust(false, p.Name),
+					})
+				}
 			default:
 				return nil, fmt.Errorf("the param type %s is not supported", p.Type)
 			}
@@ -179,6 +190,14 @@ func apiMethod (url , meth string, def *analyse.RestApiDef)(m *method, err error
 			m.Returns = append(m.Returns,  &Result{
 				Type: s.Format,
 				SwaggerType: IntType,
+				StatusCode: statusCode,
+				Name: rspName,
+			})
+		case BooleanType:
+			rspName, _ := charset.CamelCaseFormat(false,"rsp", statusCode)
+			m.Returns = append(m.Returns,  &Result{
+				Type: `bool`,
+				SwaggerType: BooleanType,
 				StatusCode: statusCode,
 				Name: rspName,
 			})

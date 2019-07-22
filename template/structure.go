@@ -106,6 +106,8 @@ func filed( s templateStructure, fieldName string,
 			}
 		case IntType:
 			s[fieldName] = field.Format
+		case BooleanType:
+			s[fieldName] = `bool`
 		default:
 			s[fieldName] = field.Type
 		}
