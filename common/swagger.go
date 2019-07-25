@@ -88,6 +88,8 @@ func RouterBind(engine *gin.Engine, description []byte, Operation func(operation
 		routerGroup.Handle(ginMethod(desc.Method), urlParamTransfer(desc.Url), Operation(desc.OperationId))
 	}
 
+	Register(engine)
+
 	return nil
 }
 

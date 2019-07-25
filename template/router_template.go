@@ -10,6 +10,11 @@ import (
 )
 {{$input:=.}}{{range $index, $router := $input}}{{$method := $router.Method}}
 func {{$method.Name}}(ctx *gin.Context){
+    if {{$router.Instance|instance}} == nil {
+        ctx.Writer.WriteHeader(404)
+        return
+    }
+
     {{range $param := $method.Parameters}}
     {{ if  (eq $param.IN  "body") }}{{ if (eq $param.SwaggerType "object") }}{{$param.Name}} := &definitions.{{$param.Type|excludePtr}}{}
     if err := ctx.BindJSON(&{{$param.Name}}); err != nil{
