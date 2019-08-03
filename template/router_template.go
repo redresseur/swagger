@@ -7,6 +7,7 @@ import (
     "encoding/json"
     "github.com/gin-gonic/gin"
     "net/http"
+	"fmt"
 )
 {{$input:=.}}{{range $index, $router := $input}}{{$method := $router.Method}}
 func {{$method.Name}}(ctx *gin.Context){

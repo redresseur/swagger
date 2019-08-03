@@ -60,6 +60,13 @@ func main(){
 		panic(err)
 	}
 
+	commonOut, err := ioutils.OpenFile(filepath.Join(output, "definitions", "common.go"), "")
+	if err := template.OutputEnumsCode(commonOut); err != nil{
+		panic(err)
+	}else {
+		defer commonOut.Close()
+	}
+
 	structureOut, err := ioutils.OpenFile(filepath.Join(output, "definitions", "structure.go"), "")
 	if err != nil{
 		panic(err)
@@ -93,4 +100,6 @@ func main(){
 	if err := template.OutputDescription(descOutput); err != nil{
 		panic(err)
 	}
+
+
 }

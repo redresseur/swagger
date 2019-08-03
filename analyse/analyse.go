@@ -95,6 +95,7 @@ type RestApi struct {
 type Items struct {
 	Type string `json:"type" yaml:"type" mapstructure:"type"`
 	Reference string `json:"$ref" yaml:"$ref" mapstructure:"$ref"`
+	Enum []string `json:"enum" yaml:"enum" mapstructure:"enum"`
 }
 
 type Field struct {
@@ -103,6 +104,7 @@ type Field struct {
 	Items interface{} `json:"items" yaml:"items" mapstructure:"items"`
 	Reference string `json:"$ref" yaml:"$ref" mapstructure:"$ref"`
 	Properties map[string]interface{} `json:"properties" yaml:"properties" mapstructure:"properties"`
+	Enum []string `json:"enum" yaml:"enum" mapstructure:"enum"`
 }
 
 type DefinitionDef struct {

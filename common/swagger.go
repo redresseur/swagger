@@ -64,8 +64,9 @@ func ginMethod(m string)string  {
 }
 
 func urlParamTransfer(url string)string{
-	url = strings.ReplaceAll(url, "{", ":"  )
-	url = strings.ReplaceAll(url, "}", ""  )
+	strings.NewReplacer("{", ":").Replace(url)
+	url = strings.NewReplacer("{", ":").Replace(url)
+	url = strings.NewReplacer( "}", "").Replace(url)
 	return url
 }
 

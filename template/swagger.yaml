@@ -16,6 +16,7 @@ tags:
 - name: meeting
   description:  meeting managerment interfaces in the system
 - name: permission
+- name: devices
 
 paths:
   /users/add:
@@ -159,12 +160,6 @@ paths:
         type: string
         required: true
       responses:
-        '200' :
-          description: SuperAdmin list all users respond
-          schema:
-            $ref: '#/definitions/UsersListRsp'
-
-
         default:
           description: SuperAdmin list all users respond
           schema:
@@ -173,6 +168,8 @@ paths:
               errorsFlag:
                 type: integer
                 format: int32
+              payload:
+                $ref: '#/definitions/UsersListRsp'
               errorsDesc:
                 type: string
 
@@ -211,11 +208,6 @@ paths:
                 format: int32
               errorsDesc:
                 type: string # 返回一个错误描述的数组
-                #properties:
-                #  policeNum:
-                #    type: string
-                #  passWd:
-                #    type: string
               payload:
                 $ref: '#/definitions/LoginRsp'
 
@@ -422,7 +414,7 @@ paths:
               errorsDesc:
                 type: string
               payload:
-                type: object
+                $ref: '#/definitions/JoinMeetingRsp'
             #$ref: '#/definitions/Rsp'
 
   /meeting/{meeting_id}/exit:
@@ -499,6 +491,42 @@ paths:
                 type: object
 
 
+  /meeting/{meeting_id}/start:
+    post:
+      tags:
+      - meeting
+      description: start share desktop
+      operationId: startShareDesktop
+      summary: 發起人共享屏幕
+      consumes:
+      - 'application/json'
+      produces:
+      - 'application/json'
+      parameters:
+      - in: path
+        name: meeting_id
+        description: the number of meeting
+        required: true
+        type: string
+      - in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/ShareDesktopReq'
+      responses:
+        default:
+          description: start share desktop respond
+          schema:
+            type: object
+            properties:
+              errorsFlag:
+                type: integer
+                format: int32
+              errorsDesc:
+                type: string
+              payload:
+                type: object
+
   /meeting/{meeting_id}/pause:
     post:
       tags:
@@ -571,6 +599,42 @@ paths:
               payload:
                 type: object
 
+  # 任何会议中的人员都可以申请
+  # 查看当前会议中人员状态
+  /meeting/{meeting_id}/users:
+    get:
+      tags:
+      - meeting
+      description: get the meeting's users
+      operationId: listMeetingUsers
+      summary: 获取当前会议的所有用户
+      consumes:
+      - 'application/json'
+      produces:
+      - 'application/json'
+      parameters:
+      - in: path
+        name: meeting_id
+        description: the number of meeting
+        required: true
+        type: string
+      - in: query
+        required: true
+        name: sessionId
+        type: string
+      responses:
+        default:
+          description: the number of meeting respond
+          schema:
+            type: object
+            properties:
+              errorsFlag:
+                type: integer
+                format: int32
+              errorsDesc:
+                type: string
+              payload:
+                $ref: '#/definitions/ListMeetingUsersRsp'
 
   # 参与者
   # 参与者申请发言
@@ -596,6 +660,10 @@ paths:
         required: true
         name: sessionId
         type: string
+      - in: query
+        name: audio_device
+        required: true
+        type: string
       responses:
         default:
           description: create a meeting respond
@@ -610,14 +678,14 @@ paths:
               payload:
                 type: object
 
-  # 发起人取消参与者的权限
+  # 发起人取消参与者发言的权限
   /meeting/{meeting_id}/permission/speak/cancel:
     post:
       tags:
       - permission
       - meeting
       description: 发起人禁止参与者发言
-      operationId: deleteSpeakers
+      operationId: cancelSpeakers
       summary: 发起人取消发言许可
       consumes:
       - 'application/json'
@@ -654,8 +722,8 @@ paths:
       tags:
       - permission
       - meeting
-      description: 发起人禁止参与者发言
-      operationId: releaseSpeakers
+      description: release speaking permission
+      operationId: releaseSpeaker
       summary: 参会者释放发言许可
       consumes:
       - 'application/json'
@@ -693,7 +761,7 @@ paths:
       - permission
       - meeting
       description: 发起人添加允许参会者发言
-      operationId: addSpeakers
+      operationId: allocteSpeakers
       summary: 发起者分配给参会者发言许可
       consumes:
       - 'application/json'
@@ -725,13 +793,50 @@ paths:
                 type: object
 
 
+    # 发起人賦予允许参与者发言權限
+  /meeting/{meeting_id}/permission/speak/reject:
+    post:
+      tags:
+      - permission
+      - meeting
+      description: 发起人拒绝参会者发言
+      operationId: rejectSpeakers
+      summary: 发起者分配给参会者发言许可
+      consumes:
+      - 'application/json'
+      produces:
+      - 'application/json'
+      parameters:
+      - in: path
+        name: meeting_id
+        description: the number of meeting
+        required: true
+        type: string
+      - in: body
+        required: true
+        name: req
+        schema:
+          $ref: '#/definitions/RejectSpeakPermissionReq'
+      responses:
+        default:
+          description: respond to reject a speaking request
+          schema:
+            type: object
+            properties:
+              errorsFlag:
+                type: integer
+                format: int32
+              errorsDesc:
+                type: string
+              payload:
+                type: object
 
   # 参与者申请控制权
   /meeting/{meeting_id}/permission/control:
     get:
       tags:
-      - meeting
       - permission
+      - meeting
       description: 参与者申请控制权
       operationId: reqControl
       summary: 参会者申请控制许可
@@ -770,7 +875,7 @@ paths:
       - permission
       - meeting
       description: 发起人添加允许参与者发言
-      operationId: cancelSpeakers
+      operationId: cancelControl
       summary: 发起人取消参会者控制许可
       consumes:
       - 'application/json'
@@ -786,7 +891,7 @@ paths:
         required: true
         name: req
         schema:
-          $ref: '#/definitions/CancelSpeakPermissionReq'
+          $ref: '#/definitions/CancelControlPermissionReq'
       responses:
         default:
           description: create a meeting respond
@@ -807,7 +912,7 @@ paths:
       tags:
       - permission
       - meeting
-      operationId: controlAlloct
+      operationId: alloctControl
       summary: 发起者分配给参会者控制许可权
       parameters:
       - in: path
@@ -832,6 +937,37 @@ paths:
               payload:
                 type: object
 
+    # 发起者赋予参会者控制权限
+  /meeting/{meeting_id}/permission/control/reject:
+    post:
+      tags:
+      - permission
+      - meeting
+      operationId: rejectControlRequire
+      summary: 发起者拒绝分配给参会者控制许可权
+      parameters:
+      - in: path
+        name: meeting_id
+        required: true
+        type: string
+      - in: body
+        name: req
+        schema:
+          $ref: '#/definitions/RejectControlPermissionReq'
+      responses:
+        default:
+          description: alloct control permission respond
+          schema:
+            type: object
+            properties:
+              errorsFlag:
+                type: integer
+                format: int32
+              errorsDesc:
+                type: string
+              payload:
+                type: object
+
   # 参与者释放控制权限
   /meeting/{meeting_id}/permission/control/release:
     post:
@@ -839,8 +975,8 @@ paths:
       - permission
       - meeting
 
-      description: share remote desktoop control
-      operationId: shareRemoteDesktopControl
+      description: release remote desktoop control
+      operationId: releaseControl
       summary: 参会者释放控制许可
       consumes:
       - 'application/json'
@@ -858,7 +994,7 @@ paths:
           $ref: '#/definitions/ReleaseControlPermissionReq'
       responses:
         default:
-          description: create a control respond
+          description: release remote desktoop control respond
           schema:
             type: object
             properties:
@@ -870,7 +1006,63 @@ paths:
               payload:
                 type: object
 
+  /devices/video/list:
+    get:
+      tags:
+      - devices
+
+      description: list the video devices
+      operationId: listVideoDevices
+      summary: 枚舉麥克風設備
+      consumes:
+      - 'application/json'
+      produces:
+      - 'application/json'
+      responses:
+        default:
+          description: list the video devices resopnd
+          schema:
+            type: object
+            properties:
+              errorsFlag:
+                type: integer
+                format: int32
+              errorsDesc:
+                type: string
+              payload:
+                $ref: '#/definitions/ListVideoDevicesRsp'
+
 definitions:
+  LoginReq:
+    type: object
+    properties:
+      passwd:
+        type: string
+      macAddress:
+        type: string
+
+  LoginRsp:
+    type: object
+    properties:
+      sessionId:
+        type: string
+      organization:
+        type: string
+      role:
+        type: string
+    required:
+    - sessionId
+    - organization
+    - role
+
+  LogoutReq:
+    type: object
+    properties:
+      sessionId:
+        type: string
+    required:
+    - sessionId
+
   UserInfo:
     type: object
     properties:
@@ -884,6 +1076,15 @@ definitions:
       createTimeStamp:
         type: integer
         format: int64
+      rtmpAddr:
+        type: string
+      control:
+        type: boolean
+      speaking:
+        type: string
+        description: "SPEAKING; SILENT; EXCEPTION"
+      isMeetingAuthor:
+        type: boolean
     required:
     - nickName
     - policeNum
@@ -985,80 +1186,16 @@ definitions:
     required:
     - users
 
-  CreateMeetingReq:
-    type: object
-    properties:
-      sessionId:
-        type: string
-      meetingName:
-        type: string
-    required:
-    - sessionId
-    - meetingName
-
-  CreateMeetingRsp:
-    type: object
-    properties:
-      meetingId:
-        type: string
-    required:
-    - meetingId
-
-  JoinMeetingReq:
-    type: object
-    properties:
-      sessionId:
-        type: string
-      meetingId:
-        type: string
-    required:
-    - sessionId
-    - meetingId
-
-  LogoutReq:
-    type: object
-    properties:
-      sessionId:
-        type: string
-    required:
-    - sessionId
-
-  LoginReq:
-    type: object
-    properties:
-      passwd:
-        type: string
-      macAddress:
-        type: string
-
-  LoginRsp:
-    type: object
-    properties:
-      sessionId:
-        type: string
-      organization:
-        type: string
-      role:
-        type: string
-    required:
-    - sessionId
-    - organization
-    - role
-
-  ListMeetingReq:
-    type: object
-    properties:
-      sessionId:
-        type: string
-    required:
-    - sessionId
-
   MeetingInfo:
     type: object
     properties:
       meetingId:
         type: string
       meetingName:
+        type: string
+      authorName:
+        type: string
+      authorOrganization:
         type: string
       meetingUsers:
         type: array
@@ -1071,6 +1208,53 @@ definitions:
     - meetingName
     - meetingUsers
     - status
+    - authorName
+    - authorOrganization
+
+  CreateMeetingReq:
+    type: object
+    properties:
+      sessionId:
+        type: string
+      meetingName:
+        type: string
+      policeNum:
+        type: string
+    required:
+    - sessionId
+    - meetingName
+
+  CreateMeetingRsp:
+    type: object
+    properties:
+      meetingId:
+        type: string
+      streamAddr:
+        type: string
+    required:
+    - meetingId
+
+  JoinMeetingReq:
+    type: object
+    properties:
+      sessionId:
+        type: string
+      meetingId:
+        type: string
+      policeNum:
+        type: string
+    required:
+    - sessionId
+    - meetingId
+    - policeNum
+
+  JoinMeetingRsp:
+    type: object
+    properties:
+      streamAddr:
+        type: string
+    required:
+    - streamAddr
 
   ListMeetingsRsp:
     type: object
@@ -1081,6 +1265,16 @@ definitions:
           $ref: "#/definitions/MeetingInfo"
     required:
     - meetings
+
+  ListMeetingUsersRsp:
+    type: object
+    properties:
+      meetingId:
+        type: string
+      meetingUsers:
+        type: array
+        items:
+          $ref: "#/definitions/UserInfo"
 
   ExitMeetingReq:
     type: object
@@ -1104,6 +1298,22 @@ definitions:
     - sessionId
     - policeNum
 
+  ShareDesktopReq:
+    type: object
+    properties:
+      sessionId:
+        type: string
+      shareDesktop:
+        type: boolean
+      shareAudioIn:
+        type: boolean
+      shareAudioOut:
+        type: boolean
+      shareAudioInDeviceName:
+        type: string
+    required:
+    - sessionId
+
   PauseMeetingReq:
     type: object
     properties:
@@ -1120,7 +1330,6 @@ definitions:
     required:
     - sessionId
 
-
   ReleaseSpeakPermissionReq:
     type: object
     properties:
@@ -1129,16 +1338,44 @@ definitions:
     required:
     - sessionId
 
+  SpeakerInfo:
+    type: object
+    properties:
+      nickName:
+        type: string
+      policeNum:
+        type: string
+      organiztion:
+        type: string
+    required:
+    - policeNum
+
   AlloctSpeakPermissionReq:
     type: object
     properties:
       sessionId:
         type: string
+      speakers:
+        type: array
+        items:
+          $ref: "#/definitions/SpeakerInfo"
+
     required:
     - sessionId
 
-
   CancelSpeakPermissionReq:
+    type: object
+    properties:
+      sessionId:
+        type: string
+      speakers:
+        type: array
+        items:
+          $ref: "#/definitions/SpeakerInfo"
+    required:
+    - sessionId
+
+  CancelControlPermissionReq:
     type: object
     properties:
       sessionId:
@@ -1151,6 +1388,28 @@ definitions:
     properties:
       sessionId:
         type: string
+      speaker:
+        $ref: "#/definitions/SpeakerInfo"
+    required:
+    - sessionId
+
+  RejectControlPermissionReq:
+    type: object
+    properties:
+      sessionId:
+        type: string
+      speaker:
+        $ref: "#/definitions/SpeakerInfo"
+    required:
+    - sessionId
+
+  RejectSpeakPermissionReq:
+    type: object
+    properties:
+      sessionId:
+        type: string
+      speaker:
+        $ref: "#/definitions/SpeakerInfo"
     required:
     - sessionId
 
@@ -1161,3 +1420,60 @@ definitions:
         type: string
     required:
     - sessionId
+
+  ListVideoDevicesRsp:
+    type: object
+    properties:
+      shareDesktopEnable:
+        type: boolean
+      audioInEnable:
+        type: boolean
+      audioOutEnable:
+        type: boolean
+      devices:
+        type: array
+        items:
+          type: string
+    required:
+    - shareDesktopEnable
+    - audioInEnable
+    - audioOutEnable
+    - devices
+
+  UserInfoEx:
+    type: object
+    properties:
+      nickName:
+        type: string
+      policeNum:
+        type: string
+        # required: true
+      organization:
+        type: string
+      createTimeStamp:
+        type: integer
+        format: int64
+      rtmpAddr:
+        type: string
+      control:
+        type: string
+        enum:
+        - CONTROL_ON
+        - CONTROL_OFF
+        - CONTROL_UNKNOWN
+        - CONTROL_REQUIRE
+      speaking:
+        type: string
+        enum:
+        - SPEAKING_ON
+        - SPEAKING_OFF
+        - UNKNOWN
+        - SPEAKING_REQUIRE
+      isMeetingAuthor:
+        type: boolean
+      status:
+        type: string
+        enum:
+        - ONLINE
+        - OFFLINE
+        - UNKNOWN
