@@ -149,14 +149,7 @@ func DefinitionComplete(defs []*analyse.Definition) error {
 
 // 駝峰命名
 func fieldNameFormat(name string) string {
-	if charset.CheckSpecialCharacter(name) {
-		panic(fmt.Sprintf("filed name %s has included special charset.", name))
-	}
-
-	humpName, err := charset.CamelCaseFormat(true, name)
-	if err != nil {
-		panic(err)
-	}
+	humpName := charset.CamelCaseFormatMust(true, name)
 	return humpName
 }
 

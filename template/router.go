@@ -13,39 +13,37 @@ import (
 )
 
 type Router struct {
-	Method *method
+	Method   *method
 	Instance string
 }
 
 var globalRouters = []*Router{}
 
 const (
-	Body  = `body`
-	Path = `path`
-	Query = `query`
+	Body    = `body`
+	Path    = `path`
+	Query   = `query`
 	Default = `default`
 )
 
-func router( def *analyse.RestApiDef) (*Router, error) {
+func router(def *analyse.RestApiDef) (*Router, error) {
 	res := &Router{}
 
-	interfaceName, err := charset.CamelCaseFormat(true, def.Tags[0])
-	if err != nil{
-		return nil, err
-	}
-
+	//interfaceName := charset.CamelCaseFormatMust(true, def.Tags[0])
+	interfaceName := def.Tags[0]
 	res.Instance = interfaceName
+
 	methods, ok := globalMethods[interfaceName]
-	if  !ok {
-		return nil, fmt.Errorf("the interface %s is valid", interfaceName)
+	if !ok {
+		return nil, fmt.Errorf("the interface %s is invalid", interfaceName)
 	}
 
 	methodName, err := charset.CamelCaseFormat(true, def.OperationId)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
-	for _, m := range methods{
+	for _, m := range methods {
 		if m.Name == methodName {
 			res.Method = m
 			return res, nil
@@ -62,15 +60,15 @@ func router( def *analyse.RestApiDef) (*Router, error) {
 */
 
 func RouterComplete(restFulApis []*analyse.RestApi) error {
-	for _, api := range restFulApis{
-		for _, def := range api.RestApiDefs{
-			if len(def.Tags) == 0{
+	for _, api := range restFulApis {
+		for _, def := range api.RestApiDefs {
+			if len(def.Tags) == 0 {
 				return ErrTagsNotExist
 			}
 
-			if r, err := router(def); err != nil{
+			if r, err := router(def); err != nil {
 				return err
-			}else {
+			} else {
 				globalRouters = append(globalRouters, r)
 			}
 		}
@@ -82,13 +80,13 @@ func excludePtr(ptr string) string {
 	return strings.NewReplacer("*", "").Replace(ptr)
 }
 
-func atoi(code string )int  {
+func atoi(code string) int {
 	if code == Default {
 		return -1
 	}
 
-	res, err := strconv.ParseInt(code, 10,0)
-	if err !=nil{
+	res, err := strconv.ParseInt(code, 10, 0)
+	if err != nil {
 		panic(err)
 	}
 
@@ -103,38 +101,39 @@ const bindfuncTpl = `func Bind%sObject(obj definitions.%s){
 	%sObject = obj
 }`
 
-func objects(routers []*Router)string{
+func objects(routers []*Router) string {
 	objs := map[string]bool{}
-	for _, r := range routers{
+	for _, r := range routers {
 		objs[r.Instance] = true
 	}
 
 	res := ""
-	for o, _ := range objs{
-		res += fmt.Sprintf("var %sObject definitions.%s = nil\n",
-			charset.CamelCaseFormatMust(false, o), o)
+	for o, _ := range objs {
+		o1 := charset.CamelCaseFormatMust(true, o)
+		o2 := charset.CamelCaseFormatMust(false, o)
 
-		res += fmt.Sprintf(bindfuncTpl, o, o, charset.CamelCaseFormatMust(false, o))
+		res += fmt.Sprintf("var %sObject definitions.%s = nil\n", o2, o1)
+		res += fmt.Sprintf(bindfuncTpl, o1, o1, o2)
 		res += "\n\n"
 	}
 
 	return res
 }
 
-func OutputRouterCode(writer io.Writer)error  {
+func OutputRouterCode(writer io.Writer) error {
 	funcMap := tt.FuncMap{
 		"fieldNameFormat": fieldNameFormat,
-		"sub": sub,
-		"excludePtr": excludePtr,
-		"atoi": atoi,
-		"objects": objects,
-		"instance":instance,
+		"sub":             sub,
+		"excludePtr":      excludePtr,
+		"atoi":            atoi,
+		"objects":         objects,
+		"instance":        instance,
 	}
 
-	if t, err := tt.New("router").Funcs(funcMap).Parse(routerTemplate);err != nil{
+	if t, err := tt.New("router").Funcs(funcMap).Parse(routerTemplate); err != nil {
 		return err
-	}else {
-		if err := t.Execute(writer, globalRouters); err != nil{
+	} else {
+		if err := t.Execute(writer, globalRouters); err != nil {
 			return err
 		}
 	}
@@ -142,26 +141,26 @@ func OutputRouterCode(writer io.Writer)error  {
 	return nil
 }
 
-func OutputRouterCodeWithTemplate(writer io.Writer, Path string)error  {
-	if fd, err := os.Open(Path); err != nil{
+func OutputRouterCodeWithTemplate(writer io.Writer, Path string) error {
+	if fd, err := os.Open(Path); err != nil {
 		return err
-	}else {
-		if data, err := ioutil.ReadAll(fd); err != nil{
+	} else {
+		if data, err := ioutil.ReadAll(fd); err != nil {
 			return err
-		}else {
+		} else {
 			funcMap := tt.FuncMap{
 				"fieldNameFormat": fieldNameFormat,
-				"sub": sub,
-				"excludePtr": excludePtr,
-				"atoi": atoi,
-				"objects": objects,
-				"instance":instance,
+				"sub":             sub,
+				"excludePtr":      excludePtr,
+				"atoi":            atoi,
+				"objects":         objects,
+				"instance":        instance,
 			}
 
-			if t, err := tt.New("router").Funcs(funcMap).Parse(string(data));err != nil{
+			if t, err := tt.New("router").Funcs(funcMap).Parse(string(data)); err != nil {
 				return err
-			}else {
-				if err := t.Execute(writer, globalRouters); err != nil{
+			} else {
+				if err := t.Execute(writer, globalRouters); err != nil {
 					return err
 				}
 			}

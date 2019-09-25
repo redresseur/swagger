@@ -12,36 +12,37 @@ import (
 
 var globalSwaggerConf = &common.SwaggerApiConf{Descriptions: &common.Descriptions{}, Operations: map[string]string{}}
 
-func DescriptionComplete(host, basePath string){
+func DescriptionComplete(host, basePath string) {
 	globalSwaggerConf.Host = host
 	globalSwaggerConf.BasePath = basePath
 
 	for _, ms := range globalMethods {
-		for _, m := range ms{
+		for _, m := range ms {
 			globalSwaggerConf.Operations[m.OperationId] = m.Name
 			pd := common.PathDescription{}
 			pd.OperationId = m.OperationId
 			pd.Url = m.Url
 			pd.Method = m.MethodType
+			pd.Tags = m.Tags
 			globalSwaggerConf.Descriptions.PathDescs = append(globalSwaggerConf.Descriptions.PathDescs, &pd)
 		}
 	}
 }
 
-const getDescriptionfunc  = `func ApisDescriptions()[]byte{
+const getDescriptionfunc = `func ApisDescriptions()[]byte{
 	return apiDescription
 }`
 
-func apiDescription( descriptions *common.Descriptions )string {
+func apiDescription(descriptions *common.Descriptions) string {
 	data, err := json.Marshal(descriptions)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
 	res := "var apiDescription  = []byte{\n	"
 	count := 0
-	for _, b := range data{
-		if count >= 16{
+	for _, b := range data {
+		if count >= 16 {
 			res += "\n	"
 			count = 0
 		}
@@ -55,24 +56,24 @@ func apiDescription( descriptions *common.Descriptions )string {
 }
 
 func OutputDescriptionWithTemplate(writer io.Writer, path string) error {
-	if fd, err := os.Open(path); err != nil{
+	if fd, err := os.Open(path); err != nil {
 		return err
-	}else {
-		if data, err := ioutil.ReadAll(fd); err != nil{
+	} else {
+		if data, err := ioutil.ReadAll(fd); err != nil {
 			return err
-		}else {
+		} else {
 			funcMap := tt.FuncMap{
 				"fieldNameFormat": fieldNameFormat,
-				"sub": sub,
-				"excludePtr": excludePtr,
-				"atoi": atoi,
-				"apiDescription": apiDescription,
+				"sub":             sub,
+				"excludePtr":      excludePtr,
+				"atoi":            atoi,
+				"apiDescription":  apiDescription,
 			}
 
-			if t, err := tt.New("swaggerConf").Funcs(funcMap).Parse(string(data));err != nil{
+			if t, err := tt.New("swaggerConf").Funcs(funcMap).Parse(string(data)); err != nil {
 				return err
-			}else {
-				if err := t.Execute(writer, globalSwaggerConf); err != nil{
+			} else {
+				if err := t.Execute(writer, globalSwaggerConf); err != nil {
 					return err
 				}
 			}
@@ -85,16 +86,16 @@ func OutputDescriptionWithTemplate(writer io.Writer, path string) error {
 func OutputDescription(writer io.Writer) error {
 	funcMap := tt.FuncMap{
 		"fieldNameFormat": fieldNameFormat,
-		"sub": sub,
-		"excludePtr": excludePtr,
-		"atoi": atoi,
-		"apiDescription": apiDescription,
+		"sub":             sub,
+		"excludePtr":      excludePtr,
+		"atoi":            atoi,
+		"apiDescription":  apiDescription,
 	}
 
-	if t, err := tt.New("swaggerConf").Funcs(funcMap).Parse(string(urlsTemplate));err != nil{
+	if t, err := tt.New("swaggerConf").Funcs(funcMap).Parse(string(urlsTemplate)); err != nil {
 		return err
-	}else {
-		if err := t.Execute(writer, globalSwaggerConf); err != nil{
+	} else {
+		if err := t.Execute(writer, globalSwaggerConf); err != nil {
 			return err
 		}
 	}

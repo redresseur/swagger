@@ -274,11 +274,9 @@ func InterfaceComplete(restFulApis []*analyse.RestApi) error {
 			}
 
 			// 用 tag[0] 作为interface 的名称
-			interfaceName, err := charset.CamelCaseFormat(true, def.Tags[0])
-			if err != nil{
-				return err
-			}
-
+			//interfaceName := charset.CamelCaseFormatMust(true, def.Tags[0])
+			// FixMe: 在模板中轉化
+			interfaceName := def.Tags[0]
 			if m, err := apiMethod(api.Url, meth, def); err != nil{
 				return err
 			} else {

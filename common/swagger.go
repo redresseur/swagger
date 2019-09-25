@@ -2,10 +2,12 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/redresseur/auth_manager"
 	"github.com/redresseur/auth_manager/namespace"
 	"net/http"
+	"regexp"
 	"strings"
 )
 
@@ -38,7 +40,7 @@ var (
 	apiAuthorityEnable bool
 
 	// 权限存储空间
-	apiAuthorityRootSpace = namespace.NewNameSpace("/")
+	apiAuthorityRootSpace = namespace.NewNameSpace("/", nil)
 
 	apiAuthorityLinks = map[string]struct {
 		Desc  *PathDescription
@@ -48,28 +50,41 @@ var (
 	apiAuthorityGroup = map[string]*namespace.RestFulAuthorNamespace{}
 )
 
-func UpdateGroupAuthor(name string, ops ...namespace.CondsOp) {
+func UpdateGroupAuthor(name string, ops ...namespace.CondsOp) error {
 	sp, ok := apiAuthorityGroup[name]
 	if !ok {
-		return
+		return errors.New("the group is not found")
 	}
 
-	namespace.UpdateCondition(sp, ops...)
+	return namespace.UpdateCondition(sp, ops...)
 }
 
-func Replace(url string, param ...string) string {
-	return ""
+func Replace(url string, params ...string) (string, error) {
+	rc, _ := regexp.Compile(`(\{.[a-zA-Z\_0-9]+\})`)
+	urlParams := rc.FindAllString(url, -1)
+
+	if len(urlParams) > len(params){
+		return "", errors.New("the number of params is not enough")
+	}
+
+	for i, up := range urlParams {
+		url = strings.Replace(url, up, params[i], 1)
+	}
+
+	return url, nil
 }
 
-func UpdateApiAuthor(operationId string, param []string, ops ...namespace.CondsOp) error {
+func UpdateApiAuthor(operationId string, param []string, ops ...namespace.CondsOp) (err error) {
 	desc, ok := apiAuthorityLinks[operationId]
 	if !ok {
-		return nil
+		return errors.New("the operation id is not found")
 	}
 
 	uri := desc.Desc.Url
 	if len(param) > 0 {
-		uri = Replace(uri, param...)
+		if uri, err = Replace(uri, param...); err !=nil{
+			return err
+		}
 	}
 
 	sp, err := namespace.AddSubNameSpace(apiAuthorityRootSpace, uri)
@@ -77,7 +92,7 @@ func UpdateApiAuthor(operationId string, param []string, ops ...namespace.CondsO
 		return err
 	}
 
-	if err := namespace.UpdateCondition(sp, ops...); err != nil{
+	if err := namespace.UpdateCondition(sp, ops...); err != nil {
 		return err
 	}
 
@@ -89,7 +104,7 @@ func UpdateApiAuthor(operationId string, param []string, ops ...namespace.CondsO
 		}
 
 		sp, err = namespace.ReverseFind(sp, g)
-		if err != nil{
+		if err != nil {
 			break
 		}
 
@@ -170,6 +185,21 @@ func RouterBind(engine *gin.Engine, description []byte, Operation func(operation
 			sp, err := namespace.AddSubNameSpace(apiAuthorityRootSpace, desc.Url)
 			if err != nil {
 				return err
+			}
+
+			for _, g := range desc.Tags {
+				g_sp, _ := namespace.ReverseFind(sp, g)
+				if g_sp == nil {
+					continue
+				}
+
+				g_sp_g, ok := apiAuthorityGroup[g]
+				if !ok {
+					apiAuthorityGroup[g] = namespace.NewNameSpace(g, nil)
+					g_sp_g = apiAuthorityGroup[g]
+				}
+
+				g_sp.SrcNamespace = g_sp_g.SrcNamespace
 			}
 
 			apiAuthorityLinks[desc.OperationId] = struct {

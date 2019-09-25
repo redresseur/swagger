@@ -9,35 +9,37 @@ import (
 )
 
 var (
-	swagger  = `swagger`
-	output = `output`
+	swagger = `swagger`
+	output  = `output`
+	authorityEnable = false
 )
 
-func main(){
-	flag.StringVar(&swagger, swagger,"swagger.yaml", "swagger template, only support yaml")
-	flag.StringVar(&output, output,"./" , "output dir")
+func main() {
+	flag.StringVar(&swagger, swagger, "swagger.yaml", "swagger template, only support yaml")
+	flag.StringVar(&output, output, "./", "output dir")
+	flag.BoolVar(&authorityEnable, "author", authorityEnable, "api authority enable")
 	flag.Parse()
 
 	data, err := analyse.ReadYaml(swagger)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
 	defs, err := analyse.GetDefinition(data)
-	if  err != nil{
+	if err != nil {
 		panic(err)
 	}
 
-	if err := template.DefinitionComplete(defs); err != nil{
+	if err := template.DefinitionComplete(defs); err != nil {
 		panic(err)
 	}
 
 	apis, err := analyse.GetRestApi(data)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
-	if err := template.InterfaceComplete(apis); err != nil{
+	if err := template.InterfaceComplete(apis); err != nil {
 		panic(err)
 	}
 
@@ -45,61 +47,72 @@ func main(){
 		panic(err)
 	}
 
-	if _, err := ioutils.CreateDirIfMissing(filepath.Join(output, "definitions")); err != nil{
+	if _, err := ioutils.CreateDirIfMissing(filepath.Join(output, "definitions")); err != nil {
 		panic(err)
 	}
 
-	interfaceOut ,err := ioutils.OpenFile(filepath.Join(output, "definitions", "interface.go"), "")
-	if err != nil{
+	interfaceOut, err := ioutils.OpenFile(filepath.Join(output, "definitions", "interface.go"), "")
+	if err != nil {
 		panic(err)
-	}else {
+	} else {
 		defer interfaceOut.Close()
 	}
 
-	if err := template.OutputInterfaceCode(interfaceOut); err != nil{
+	if err := template.OutputInterfaceCode(interfaceOut); err != nil {
 		panic(err)
 	}
 
 	commonOut, err := ioutils.OpenFile(filepath.Join(output, "definitions", "common.go"), "")
-	if err := template.OutputEnumsCode(commonOut); err != nil{
+	if err := template.OutputEnumsCode(commonOut); err != nil {
 		panic(err)
-	}else {
+	} else {
 		defer commonOut.Close()
 	}
 
 	structureOut, err := ioutils.OpenFile(filepath.Join(output, "definitions", "structure.go"), "")
-	if err != nil{
+	if err != nil {
 		panic(err)
-	}else {
+	} else {
 		defer structureOut.Close()
 	}
 
-	if err := template.OutputStructureCode(structureOut); err != nil{
+	if err := template.OutputStructureCode(structureOut); err != nil {
 		panic(err)
 	}
 
 	apisOutput, err := ioutils.OpenFile(filepath.Join(output, "apis.go"), "")
-	if err != nil{
+	if err != nil {
 		panic(err)
-	}else {
+	} else {
 		defer apisOutput.Close()
 	}
 
-	if err := template.OutputRouterCode(apisOutput); err != nil{
+	if err := template.OutputRouterCode(apisOutput); err != nil {
 		panic(err)
 	}
 
 	template.DescriptionComplete(analyse.GetHost(data), analyse.GetBasePath(data))
 	descOutput, err := ioutils.OpenFile(filepath.Join(output, "descriptions.go"), "")
-	if err != nil{
+	if err != nil {
 		panic(err)
-	}else {
+	} else {
 		defer descOutput.Close()
 	}
 
-	if err := template.OutputDescription(descOutput); err != nil{
+	if err := template.OutputDescription(descOutput); err != nil {
 		panic(err)
 	}
 
+	if authorityEnable {
+		authorOutput, err := ioutils.OpenFile(filepath.Join(output, "authority.go"), "")
+		if err != nil {
+			panic(err)
+		} else {
+			defer authorOutput.Close()
+		}
 
+		if err := template.OutputAuthorityCode(authorOutput); err != nil {
+			panic(err)
+		}
+	}
 }
