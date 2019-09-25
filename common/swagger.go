@@ -10,9 +10,10 @@ import (
 )
 
 type PathDescription struct {
-	Url         string `json:"url"`
-	Method      string `json:"method"`
-	OperationId string `json:"operationId"`
+	Url         string   `json:"url"`
+	Method      string   `json:"method"`
+	OperationId string   `json:"operationId"`
+	Tags        []string `json:"tags"`
 }
 
 type Descriptions struct {
@@ -34,7 +35,7 @@ var (
 	basePath      string
 	host          string
 
-	apiAuthority bool
+	apiAuthorityEnable bool
 
 	// 权限存储空间
 	apiAuthorityRootSpace = namespace.NewNameSpace("/")
@@ -43,11 +44,67 @@ var (
 		Desc  *PathDescription
 		Space *namespace.RestFulAuthorNamespace
 	}{}
+
+	apiAuthorityGroup = map[string]*namespace.RestFulAuthorNamespace{}
 )
+
+func UpdateGroupAuthor(name string, ops ...namespace.CondsOp) {
+	sp, ok := apiAuthorityGroup[name]
+	if !ok {
+		return
+	}
+
+	namespace.UpdateCondition(sp, ops...)
+}
+
+func Replace(url string, param ...string) string {
+	return ""
+}
+
+func UpdateApiAuthor(operationId string, param []string, ops ...namespace.CondsOp) error {
+	desc, ok := apiAuthorityLinks[operationId]
+	if !ok {
+		return nil
+	}
+
+	uri := desc.Desc.Url
+	if len(param) > 0 {
+		uri = Replace(uri, param...)
+	}
+
+	sp, err := namespace.AddSubNameSpace(apiAuthorityRootSpace, uri)
+	if err != nil {
+		return err
+	}
+
+	if err := namespace.UpdateCondition(sp, ops...); err != nil{
+		return err
+	}
+
+	// 复制组策略
+	for _, g := range desc.Desc.Tags {
+		g_sp, ok := apiAuthorityGroup[g]
+		if !ok {
+			continue
+		}
+
+		sp, err = namespace.ReverseFind(sp, g)
+		if err != nil{
+			break
+		}
+
+		// 此处使用浅拷贝
+		// 所以当组策略发生变化的时候
+		// 所有关联的策略都会变化
+		sp.SrcNamespace = g_sp.SrcNamespace
+	}
+
+	return nil
+}
 
 func WithApiAuthority() BindOptions {
 	return func() {
-		apiAuthority = true
+		apiAuthorityEnable = true
 	}
 }
 
@@ -103,12 +160,12 @@ func RouterBind(engine *gin.Engine, description []byte, Operation func(operation
 	engine.Use(globalMiddles...)
 	routerGroup := engine.Group(basePath, groupMiddles...)
 
-	if apiAuthority {
+	if apiAuthorityEnable {
 		apiAuthorityRootSpace, err = namespace.AddSubNameSpace(apiAuthorityRootSpace, apiDescs.BasePath)
 	}
 
 	for _, desc := range apiDescs.PathDescs {
-		if apiAuthority {
+		if apiAuthorityEnable {
 			// 开启认证
 			sp, err := namespace.AddSubNameSpace(apiAuthorityRootSpace, desc.Url)
 			if err != nil {
@@ -153,9 +210,14 @@ func Cros(ctx *gin.Context) {
 }
 
 func Authorization(ctx *gin.Context) {
+	if !apiAuthorityEnable {
+		ctx.Next()
+		return
+	}
+
 	// 取到namespace
 	sp, err := namespace.NameSpace(apiAuthorityRootSpace, ctx.Request.RequestURI)
-	if err !=nil{
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"errDesc": err.Error()})
 		return
 	}

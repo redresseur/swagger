@@ -48,6 +48,7 @@ type method struct {
 	MethodType string `desc:"請求的類型：GET POST OPTIONS DELETE PUT TRACE HEADER CONNECT"`
 	Url string
 	OperationId string
+	Tags []string
 }
 
 var (
@@ -63,6 +64,8 @@ func apiMethod (url , meth string, def *analyse.RestApiDef)(m *method, err error
 	m.MethodType = meth
 	m.Url = url
 	m.OperationId = def.OperationId
+	m.Tags = def.Tags
+
 	if m.Name, err = charset.CamelCaseFormat(true, def.OperationId); err != nil{
 		return nil, err
 	}
