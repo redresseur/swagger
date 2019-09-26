@@ -44,6 +44,8 @@ var (
 	// 权限存储空间
 	apiAuthorityRootSpace = namespace.NewNameSpace("/", nil)
 
+	apiAuthorityBaseSpace *namespace.RestFulAuthorNamespace
+
 	apiAuthorityLinks = map[string]struct {
 		Desc  *PathDescription
 		Space *namespace.RestFulAuthorNamespace
@@ -89,7 +91,7 @@ func UpdateApiAuthor(operationId string, param []string, ops ...namespace.CondsO
 		}
 	}
 
-	sp, err := namespace.AddSubNameSpace(apiAuthorityRootSpace, uri)
+	sp, err := namespace.AddSubNameSpace(apiAuthorityBaseSpace, uri)
 	if err != nil {
 		return err
 	}
@@ -178,13 +180,13 @@ func RouterBind(engine *gin.Engine, description []byte, Operation func(operation
 	routerGroup := engine.Group(basePath, groupMiddles...)
 
 	if apiAuthorityEnable {
-		apiAuthorityRootSpace, err = namespace.AddSubNameSpace(apiAuthorityRootSpace, apiDescs.BasePath)
+		apiAuthorityBaseSpace, err = namespace.AddSubNameSpace(apiAuthorityRootSpace, apiDescs.BasePath)
 	}
 
 	for _, desc := range apiDescs.PathDescs {
 		if apiAuthorityEnable {
 			// 开启认证
-			sp, err := namespace.AddSubNameSpace(apiAuthorityRootSpace, desc.Url)
+			sp, err := namespace.AddSubNameSpace(apiAuthorityBaseSpace, desc.Url)
 			if err != nil {
 				return err
 			}
@@ -235,18 +237,19 @@ func Cros() gin.HandlerFunc {
 		// 所有option全部跳过
 		if strings.ToLower(ctx.Request.Method) == `options` {
 			ctx.JSON(http.StatusOK, gin.H{})
+			ctx.Abort()
 			return
 		}
 
 		// 判断 SessionId
-		ctx.Next()
+		// ctx.Next()
 	}
 }
 
 func Authorization() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if !apiAuthorityEnable {
-			ctx.Next()
+			//ctx.Next()
 			return
 		}
 
@@ -260,6 +263,7 @@ func Authorization() gin.HandlerFunc {
 		// 进行api权限测权限
 		if err := auth_manager.CheckAuthority(ctx, sp); err != nil {
 			ctx.JSON(http.StatusForbidden, gin.H{"errDesc": err.Error()})
+			ctx.Abort()
 		} else {
 			ctx.Next()
 		}
