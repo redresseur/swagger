@@ -3,6 +3,8 @@ package common
 import (
 	"encoding/json"
 	"errors"
+	"github.com/gorilla/sessions"
+
 	"github.com/gin-gonic/gin"
 	"github.com/redresseur/auth_manager"
 	"github.com/redresseur/auth_manager/namespace"
@@ -63,7 +65,7 @@ func Replace(url string, params ...string) (string, error) {
 	rc, _ := regexp.Compile(`(\{.[a-zA-Z\_0-9]+\})`)
 	urlParams := rc.FindAllString(url, -1)
 
-	if len(urlParams) > len(params){
+	if len(urlParams) > len(params) {
 		return "", errors.New("the number of params is not enough")
 	}
 
@@ -82,7 +84,7 @@ func UpdateApiAuthor(operationId string, param []string, ops ...namespace.CondsO
 
 	uri := desc.Desc.Url
 	if len(param) > 0 {
-		if uri, err = Replace(uri, param...); err !=nil{
+		if uri, err = Replace(uri, param...); err != nil {
 			return err
 		}
 	}
@@ -224,40 +226,81 @@ func addHeader(ctx *gin.Context) {
 	ctx.Writer.Header().Set("content-type", "application/json")             //返回数据格式是json
 }
 
-func Cros(ctx *gin.Context) {
-	// add header
-	addHeader(ctx)
+func Cros() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// add header
+		addHeader(ctx)
 
-	// filter
-	// 所有option全部跳过
-	if strings.ToLower(ctx.Request.Method) == `options` {
-		ctx.JSON(http.StatusOK, gin.H{})
-		return
+		// filter
+		// 所有option全部跳过
+		if strings.ToLower(ctx.Request.Method) == `options` {
+			ctx.JSON(http.StatusOK, gin.H{})
+			return
+		}
+
+		// 判断 SessionId
+		ctx.Next()
 	}
-
-	// 判断 SessionId
-	ctx.Next()
 }
 
-func Authorization(ctx *gin.Context) {
-	if !apiAuthorityEnable {
-		ctx.Next()
+func Authorization() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		if !apiAuthorityEnable {
+			ctx.Next()
+			return
+		}
+
+		// 取到namespace
+		sp, err := namespace.NameSpace(apiAuthorityRootSpace, ctx.Request.RequestURI)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"errDesc": err.Error()})
+			return
+		}
+
+		// 进行api权限测权限
+		if err := auth_manager.CheckAuthority(ctx, sp); err != nil {
+			ctx.JSON(http.StatusForbidden, gin.H{"errDesc": err.Error()})
+		} else {
+			ctx.Next()
+		}
+
 		return
 	}
+}
 
-	// 取到namespace
-	sp, err := namespace.NameSpace(apiAuthorityRootSpace, ctx.Request.RequestURI)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"errDesc": err.Error()})
-		return
+func Sessions(store sessions.Store, appName string) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		//sid := ctx.GetHeader(X_Session_UUID)
+		//if sid == "" {
+		//	return
+		//}
+		//
+		ss, err := store.Get(ctx.Request, appName)
+		if err != nil{
+			return
+		}
+
+		ctx.Set(X_Session, ss)
+	}
+}
+
+const (
+	X_Session_UUID = "X-Session-UUID"
+	X_Permission   = "X-Permission"
+	X_Session = "X-S-Session"
+)
+
+func PermissionFromSessions(ctx *gin.Context) (interface{}, error) {
+	s, ok := ctx.Get(X_Session)
+	if !ok {
+		// 此时可能尚未登陆
+		return nil, nil
 	}
 
-	// 进行api权限测权限
-	if err := auth_manager.CheckAuthority(ctx, sp); err != nil {
-		ctx.JSON(http.StatusForbidden, gin.H{"errDesc": err.Error()})
-	} else {
-		ctx.Next()
+	S, ok := s.(sessions.Session)
+	if !ok {
+		return nil, errors.New("Session Broken")
 	}
 
-	return
+	return S.Values, nil
 }
