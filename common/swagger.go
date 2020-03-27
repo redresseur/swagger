@@ -257,6 +257,7 @@ func Authorization() gin.HandlerFunc {
 		sp, err := namespace.NameSpace(apiAuthorityRootSpace, ctx.Request.RequestURI)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"errDesc": err.Error()})
+			ctx.Abort()
 			return
 		}
 
@@ -280,7 +281,7 @@ func Sessions(store sessions.Store, appName string) gin.HandlerFunc {
 		//}
 		//
 		ss, err := store.Get(ctx.Request, appName)
-		if err != nil{
+		if err != nil {
 			return
 		}
 
@@ -291,7 +292,7 @@ func Sessions(store sessions.Store, appName string) gin.HandlerFunc {
 const (
 	X_Session_UUID = "X-Session-UUID"
 	X_Permission   = "X-Permission"
-	X_Session = "X-S-Session"
+	X_Session      = "X-S-Session"
 )
 
 func PermissionFromSessions(ctx *gin.Context) (interface{}, error) {

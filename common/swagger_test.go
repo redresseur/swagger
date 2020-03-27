@@ -9,14 +9,14 @@ import (
 
 var (
 	apisDesc = Descriptions{
-		PathDescs: []*PathDescription{&PathDescription{
+		PathDescs: []*PathDescription{{
 			Url:         "/world/hello",
 			Method:      "GET",
 			OperationId: "HelloWorld",
 			Tags: []string{
 				"world",
 			},
-		}, &PathDescription{
+		}, {
 			Url:         "/person/{id}/name",
 			Method:      "GET",
 			OperationId: "PersonName",

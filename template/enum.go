@@ -15,9 +15,9 @@ type Enums struct {
 	Elements []string
 }
 
-func AnalyseEnums( structName, filedName, typeName string, elements []string) string {
+func AnalyseEnums(structName, filedName, typeName string, elements []string) string {
 	var err error
-	if len(elements) == 0{
+	if len(elements) == 0 {
 		return typeName
 	}
 
@@ -26,7 +26,7 @@ func AnalyseEnums( structName, filedName, typeName string, elements []string) st
 	}
 
 	enums.EnumName, err = charset.CamelCaseFormat(true, structName, filedName)
-	if err != nil{
+	if err != nil {
 		log.Fatalf("StructName %s, filedName %s: %v", structName, filedName, err)
 		return ""
 	}
@@ -40,19 +40,18 @@ func AnalyseEnums( structName, filedName, typeName string, elements []string) st
 	return enums.EnumName
 }
 
-
-func OutputEnumsCode(writer io.Writer)error{
+func OutputEnumsCode(writer io.Writer) error {
 	funcMap := tt.FuncMap{
 		"fieldNameFormat": fieldNameFormat,
-		"sub": sub,
-		"excludePtr": excludePtr,
-		"atoi": atoi,
+		"sub":             sub,
+		"excludePtr":      excludePtr,
+		"atoi":            atoi,
 	}
 
-	if t, err := tt.New("enums").Funcs(funcMap).Parse(enumsTemplate);err != nil{
+	if t, err := tt.New("enums").Funcs(funcMap).Parse(enumsTemplate); err != nil {
 		return err
-	}else {
-		if err := t.Execute(writer, globalEnums); err != nil{
+	} else {
+		if err := t.Execute(writer, globalEnums); err != nil {
 			return err
 		}
 	}

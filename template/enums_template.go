@@ -1,6 +1,6 @@
 package template
 
-const enumsTemplate  = `package definitions
+const enumsTemplate = `package definitions
 {{$input:=.}}{{range $enumTypeName, $enums := $input}}
 type {{$enumTypeName}} {{$enums.TypeName}}
 const (

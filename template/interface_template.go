@@ -1,6 +1,6 @@
 package template
 
-const interfaceTemplate  = `package definitions
+const interfaceTemplate = `package definitions
 
 {{$input:=.}}{{range $interfaceName, $methods := $input}}
 type {{$interfaceName|fieldNameFormat}} interface{

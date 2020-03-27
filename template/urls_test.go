@@ -7,7 +7,7 @@ import (
 )
 
 func TestOutputDescriptionWithTemplate(t *testing.T) {
-	res, err := analyse.ReadYaml(yamlPath);
+	res, err := analyse.ReadYaml(yamlPath)
 	if err != nil {
 		t.Fatalf("TestInterfaceComplete %v", err)
 	}

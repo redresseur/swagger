@@ -108,7 +108,7 @@ func objects(routers []*Router) string {
 	}
 
 	res := ""
-	for o, _ := range objs {
+	for o := range objs {
 		o1 := charset.CamelCaseFormatMust(true, o)
 		o2 := charset.CamelCaseFormatMust(false, o)
 

@@ -7,17 +7,17 @@ import (
 )
 
 func TestAnalyseEnums(t *testing.T) {
-	res, err := analyse.ReadYaml(yamlPath);
-	if  err != nil{
+	res, err := analyse.ReadYaml(yamlPath)
+	if err != nil {
 		t.Fatalf("TestGetPaths %v", err)
 	}
 
 	defs, err := analyse.GetDefinition(res)
-	if  err != nil{
+	if err != nil {
 		t.Fatalf("TestGetDefinition %v", err)
 	}
 
-	if err := DefinitionComplete(defs); err != nil{
+	if err := DefinitionComplete(defs); err != nil {
 		t.Fatalf("TestGetDefinition %v", err)
 	}
 

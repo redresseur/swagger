@@ -1,6 +1,6 @@
 package template
 
-const urlsTemplate  = `package apis
+const urlsTemplate = `package apis
 
 import(
     "github.com/gin-gonic/gin"

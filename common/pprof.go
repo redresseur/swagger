@@ -1,11 +1,11 @@
 package common
 
 import (
-"github.com/gin-gonic/gin"
-"net/http"
-"net/http/pprof"
-"os"
-"strconv"
+	"github.com/gin-gonic/gin"
+	"net/http"
+	"net/http/pprof"
+	"os"
+	"strconv"
 )
 
 const (
@@ -21,13 +21,13 @@ func getPrefix(prefixOptions ...string) string {
 	return prefix
 }
 
-func checkEnable() bool{
+func checkEnable() bool {
 	apiServPprof := os.Getenv("API_SERVER_PPROF")
-	if apiServPprof == ""{
+	if apiServPprof == "" {
 		return false
-	}else if n, err := strconv.Atoi(apiServPprof); err != nil {
+	} else if n, err := strconv.Atoi(apiServPprof); err != nil {
 		return false
-	}else if n != 1 {
+	} else if n != 1 {
 		return false
 	}
 
@@ -39,7 +39,7 @@ func checkEnable() bool{
 // the default path prefix is used, otherwise first prefixOptions will be path prefix.
 func Register(r *gin.Engine, prefixOptions ...string) {
 	// check the environment
-	if !checkEnable(){
+	if !checkEnable() {
 		return
 	}
 

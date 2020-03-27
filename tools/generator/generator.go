@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	swagger = `swagger`
-	output  = `output`
+	swagger         = `swagger`
+	output          = `output`
 	authorityEnable = false
 )
 
